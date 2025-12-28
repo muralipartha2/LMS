@@ -1,0 +1,126 @@
+🟢 Easy (Warm-up / Fundamentals)
+
+
+1480. Running Sum of 1d Array
+Compute cumulative sums.
+Key idea: simple prefix sum construction.
+
+
+1732. Find the Highest Altitude
+Max of cumulative gains.
+Key idea: running prefix of net gain.
+
+
+724. Find Pivot Index
+Left sum == right sum.
+Key idea: total sum and running left sum (or prefix + suffix arrays).
+
+
+1991. Find the Middle Index in Array
+Pivot index variant.
+Key idea: same as 724.
+
+
+1422. Maximum Score After Splitting a String
+Best split into zeros-left + ones-right.
+Key idea: prefix counts of ‘0’, suffix counts of ‘1’.
+
+
+303. Range Sum Query – Immutable
+Fast range sum queries.
+Key idea: prefix sum array to answer sum(l..r) in O(1).
+
+
+121. Best Time to Buy and Sell Stock (can be seen via cumulative min; not classic prefix sum, but adjacent)
+Key idea: track min prefix and max profit.
+
+
+
+🟠 Medium (Core Prefix Sum Techniques)
+
+
+560. Subarray Sum Equals K
+Count subarrays whose sum = k.
+Key idea: prefix sum + hashmap of frequencies.
+
+
+930. Binary Subarrays With Sum
+Count subarrays with sum = s in binary array.
+Key idea: identical to 560 with binary optimization.
+
+
+523. Continuous Subarray Sum
+Subarray sum is multiple of k.
+Key idea: prefix sum modulo k + earliest index map.
+
+
+525. Contiguous Array
+Longest subarray with equal 0s and 1s.
+Key idea: transform 0→-1; longest subarray with sum=0 (prefix hashmap first index).
+
+
+238. Product of Array Except Self
+Output product except self without division.
+Key idea: prefix products + suffix products (classic).
+
+
+1524. Number of Sub-arrays With Odd Sum
+Count subarrays with odd total.
+Key idea: prefix parity counts (#even, #odd).
+
+
+1124. Longest Well-Performing Interval
+Work hours > 8 vs ≤ 8.
+Key idea: transform to +1/-1; longest subarray with positive sum using prefix + monotonic stack / earliest index map.
+
+
+304. Range Sum Query 2D – Immutable
+2D prefix sums for rectangular queries.
+Key idea: 2D prefix matrix to compute any rectangle sum in O(1).
+
+
+1248. Count Number of Nice Subarrays
+Exactly k odd numbers in subarray.
+Key idea: prefix count of odds + hashmap of frequencies.
+
+
+1658. Minimum Operations to Reduce X to Zero
+Pick from ends; minimize picks.
+Key idea: convert to longest subarray with sum = total - x (prefix + hashmap or two-pointer for non-negative).
+
+
+1871. Jump Game VII (can be done via prefix of reachability windows)
+Key idea: prefix of reachable counts to speed sliding window checks.
+
+
+
+🔴 Hard (Advanced Prefix/Suffix / Trickier Use-Cases)
+
+
+689. Maximum Sum of 3 Non-Overlapping Subarrays
+Pick 3 windows of size k to maximize sum.
+Key idea: prefix sums + DP on left/best and right/best arrays.
+
+
+1074. Number of Submatrices That Sum to Target
+Count matrices with target sum.
+Key idea: fix top/bottom rows → collapse to 1D; use prefix-hash (like 560) per column span.
+
+
+1749. Maximum Absolute Sum of Any Subarray
+Max |sum| over all subarrays.
+Key idea: track min/max prefix sums; or Kadane variants for max/min.
+
+
+1125. Smallest Sufficient Team (not prefix sum, but sometimes combined with prefix-like coverage ideas; listed for breadth)
+If you prefer strictly prefix/suffix-related, you can skip this.
+
+
+2381. Shifting Letters II (difference-array / prefix application)
+Apply many range shifts efficiently.
+Key idea: difference array + prefix accumulation.
+
+
+2213. Longest Substring of One Repeating Character (with updates)
+Data-structure heavy; can use difference arrays and prefix structures for batch ops.
+(Advanced; optional.)
