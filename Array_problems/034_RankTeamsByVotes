@@ -1,0 +1,38 @@
+//https://leetcode.com/problems/rank-teams-by-votes/
+class Solution {
+    public String rankTeams(String[] votes) {
+        int n = votes[0].length();
+        int[][] rankCounts = new int[26][n];
+
+        //Build rank counts (scoreboard)
+        // Example: votes = ["ABC","ACB","BCA"]
+        for(String vote : votes){
+            for(int i=0;i<n;i++){
+                char team=vote.charAt(i);
+                rankCounts[team - 'A'][i]++;
+            }
+        }
+        List<Character> teams=new ArrayList<>();
+        for(char c: votes[0].toCharArray()){
+            teams.add(c);
+        }
+
+        Collections.sort(teams, (a,b) -> {
+            int[] rankA= rankCounts[a-'A'];
+            int[] rankB= rankCounts[b-'A'];
+
+            for(int i=0;i<n;i++){
+                if(rankA[i] != rankB[i]){
+                    return rankB[i] - rankA[i];
+                }
+            }
+            return a-b;
+        });
+
+        StringBuilder result=new StringBuilder();
+        for(char team: teams){
+            result.append(team);
+        }
+        return result.toString();
+    }
+}
