@@ -1,0 +1,25 @@
+//https://leetcode.com/problems/reduce-array-size-to-the-half/
+class Solution {
+    public int minSetSize(int[] arr) {
+        int n=arr.length;
+
+        Map<Integer, Integer> freqMap= new HashMap<>();
+        for(int num: arr){
+            freqMap.put(num,freqMap.getOrDefault(num,0)+1);
+        }
+
+        List<Integer> freqList= new ArrayList<>(freqMap.values());
+        Collections.sort(freqList, Collections.reverseOrder());
+
+        int removing_count=0;
+        int i=0;
+        int remaining= n;
+        while(remaining > n/2){
+            remaining= remaining - freqList.get(i);
+            i++;
+            removing_count++;
+        }
+
+        return removing_count;
+    }
+}
