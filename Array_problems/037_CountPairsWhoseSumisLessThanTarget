@@ -1,0 +1,28 @@
+//https://leetcode.com/problems/count-pairs-whose-sum-is-less-than-target/description/
+class Solution {
+    public int countPairs(List<Integer> nums, int target) {
+
+     int n=nums.size();
+
+     // once we sort, we can properly approach for 2 pointers.
+     Collections.sort(nums);
+
+     int left=0;
+     int right= n-1;
+     int countOfPairs=0;
+
+     while(left < right){
+        int sum= nums.get(left) + nums.get(right);
+
+        if(sum < target){
+            // if a particular combination of index is lesser than the target then all the combination between the 2 indices are lesser,thats why we do (rightIndex - leftIndex)
+            countOfPairs+=(right-left);
+            left++;
+        }else{
+           // sum is too large or equal, so this pair doesn't workout so we have to minimize from the right.
+           right--;
+        }
+     }
+     return countOfPairs;
+    }
+}
