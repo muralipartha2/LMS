@@ -1,0 +1,17 @@
+//https://leetcode.com/problems/contains-duplicate-ii/
+class Solution {
+    public boolean containsNearbyDuplicate(int[] nums, int k) {
+        HashMap<Integer, Integer> indexMap=new HashMap<>();
+
+        for(int i=0;i<nums.length;i++){
+            if(indexMap.containsKey(nums[i])){
+                int distance = i - indexMap.get(nums[i]);
+                if(distance <= k){
+                    return true;
+                }
+            }
+            indexMap.put(nums[i],i);
+        }
+        return false;
+    }
+}
