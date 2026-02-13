@@ -1,0 +1,42 @@
+//https://leetcode.com/problems/longest-substring-with-at-least-k-repeating-characters/
+class Solution {
+    public int longestSubstring(String s, int k) {
+
+        if(s.length() <k)
+        return 0;
+
+        int[] countArray=new int[26];
+
+        for(char c : s.toCharArray()){
+            countArray[c-'a']++;
+        }
+
+        boolean valid =true;
+        for(int freq: countArray){
+            if(freq > 0 && freq < k){
+                valid = false;
+                break;
+            }
+        }
+
+        if(valid){
+            return s.length();
+        }
+
+        //find an invalid character to split by
+        int maxLen=0;
+        int start=0;
+
+        for(int i=0;i<= s.length();i++){
+            //split at invalid characters or end of string
+            if(i == s.length() || countArray[s.charAt(i) - 'a'] < k){
+                if(i > start){
+                    // Recursively check substring
+                    int len= longestSubstring(s.substring(start,i), k);
+                    maxLen = Math.max(maxLen, len);                }
+                start = i+1;
+            }
+        }
+        return maxLen;
+        }
+}
