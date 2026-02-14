@@ -1,5 +1,5 @@
 //Link https://leetcode.com/problems/contains-duplicate/ 
-
+// works only for +ve values
 class Solution {
     public boolean containsDuplicate(int[] nums) {
 
