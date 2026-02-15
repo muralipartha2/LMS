@@ -1,0 +1,275 @@
+// 
+import java.util.*;
+
+class Solution {
+    /**
+     * APPROACH: BRUTE FORCE
+     * 
+     * Algorithm:
+     * 1. Sort the pattern string p once
+     * 2. For each possible window of size p.length() in string s:
+     *    - Extract the substring
+     *    - Sort the substring
+     *    - Compare with sorted p
+     *    - If they match, it's an anagram
+     * 
+     * Time Complexity: O(n × m log m)
+     *   - n = length of s, m = length of p
+     *   - We iterate through ~n windows
+     *   - Each window requires sorting: O(m log m)
+     * 
+     * Space Complexity: O(m)
+     *   - For storing sorted strings
+     * 
+     * Why this approach?
+     *   - Simple and straightforward
+     *   - Easy to understand
+     *   - Works but inefficient for large inputs
+     */
+    public List<Integer> findAnagrams(String s, String p) {
+        List<Integer> result = new ArrayList<>();
+        
+        // Edge case: if p is longer than s, no anagrams possible
+        if (p.length() > s.length()) {
+            return result;
+        }
+        
+        // Step 1: Sort pattern p once (one-time cost)
+        char[] pArray = p.toCharArray();
+        Arrays.sort(pArray);
+        String sortedP = new String(pArray);
+        
+        int windowSize = p.length();
+        
+        // Step 2: Check each window of size p.length() in s
+        for (int i = 0; i <= s.length() - windowSize; i++) {
+            // Extract substring window
+            String window = s.substring(i, i + windowSize);
+            
+            // Sort the current window
+            char[] windowArray = window.toCharArray();
+            Arrays.sort(windowArray);
+            String sortedWindow = new String(windowArray);
+            
+            // Compare sorted strings - if equal, they're anagrams
+            if (sortedWindow.equals(sortedP)) {
+                result.add(i);
+            }
+        }
+        
+        return result;
+    }
+}
+```
+
+---
+
+## **Approach 2: Optimized - Sliding Window with HashMap**
+
+```java
+import java.util.*;
+
+class Solution {
+    /**
+     * APPROACH: SLIDING WINDOW WITH FREQUENCY COUNT (HashMap)
+     * 
+     * Algorithm:
+     * 1. Create frequency map for pattern p
+     * 2. Create frequency map for first window in s
+     * 3. Compare both maps - if equal, found anagram at index 0
+     * 4. Slide the window:
+     *    - Add the new character entering the window (increment count)
+     *    - Remove the character leaving the window (decrement count)
+     *    - Compare frequency maps after each slide
+     * 5. Collect all indices where maps match
+     * 
+     * Key Insight:
+     *   - Two strings are anagrams if they have same character frequencies
+     *   - Instead of sorting every window, maintain frequency counts
+     *   - Update counts incrementally as window slides (O(1) per slide)
+     * 
+     * Time Complexity: O(n)
+     *   - Single pass through string s
+     *   - Map comparison is O(26) = O(1) for lowercase letters
+     * 
+     * Space Complexity: O(1)
+     *   - Maps contain at most 26 keys (lowercase letters)
+     *   - Constant space regardless of input size
+     * 
+     * Trade-offs:
+     *   - Uses extra space for HashMaps
+     *   - Much faster than brute force
+     *   - Works for any character set (not just lowercase)
+     */
+    public List<Integer> findAnagrams(String s, String p) {
+        List<Integer> result = new ArrayList<>();
+        
+        // Edge case: if p is longer than s, no anagrams possible
+        if (p.length() > s.length()) {
+            return result;
+        }
+        
+        // Step 1: Build frequency map for pattern p
+        Map<Character, Integer> pCount = new HashMap<>();
+        for (char c : p.toCharArray()) {
+            pCount.put(c, pCount.getOrDefault(c, 0) + 1);
+        }
+        
+        // Step 2: Build frequency map for sliding window
+        Map<Character, Integer> windowCount = new HashMap<>();
+        
+        int windowSize = p.length();
+        
+        // Step 3: Build the first window (indices 0 to windowSize-1)
+        for (int i = 0; i < windowSize; i++) {
+            char c = s.charAt(i);
+            windowCount.put(c, windowCount.getOrDefault(c, 0) + 1);
+        }
+        
+        // Step 4: Check if first window is an anagram
+        if (windowCount.equals(pCount)) {
+            result.add(0);
+        }
+        
+        // Step 5: Slide the window through the rest of string s
+        for (int i = windowSize; i < s.length(); i++) {
+            // Add new character entering the window (right side)
+            char newChar = s.charAt(i);
+            windowCount.put(newChar, windowCount.getOrDefault(newChar, 0) + 1);
+            
+            // Remove old character leaving the window (left side)
+            char oldChar = s.charAt(i - windowSize);
+            windowCount.put(oldChar, windowCount.get(oldChar) - 1);
+            
+            // Clean up: remove character from map if count becomes 0
+            // This ensures accurate map comparison
+            if (windowCount.get(oldChar) == 0) {
+                windowCount.remove(oldChar);
+            }
+            
+            // Check if current window is an anagram of p
+            if (windowCount.equals(pCount)) {
+                // Starting index of current window
+                result.add(i - windowSize + 1);
+            }
+        }
+        
+        return result;
+    }
+}
+```
+
+---
+
+## **Approach 3: Further Optimized - Sliding Window with Array**
+
+```java
+import java.util.*;
+
+class Solution {
+    /**
+     * APPROACH: SLIDING WINDOW WITH FREQUENCY COUNT (Array)
+     * 
+     * Algorithm:
+     * Same as Approach 2, but uses int[26] arrays instead of HashMap
+     * 
+     * Optimization:
+     *   - For lowercase letters only, we can use array indexing
+     *   - Index calculation: char - 'a' gives index 0-25
+     *   - Array comparison is slightly faster than HashMap comparison
+     *   - No hash function overhead
+     * 
+     * Time Complexity: O(n)
+     *   - Single pass through string s
+     *   - Array comparison is O(26) = O(1)
+     * 
+     * Space Complexity: O(1)
+     *   - Fixed array of size 26
+     * 
+     * Trade-offs:
+     *   - Fastest implementation
+     *   - Only works for lowercase letters (26 characters)
+     *   - If input has uppercase or special chars, use HashMap approach
+     *   - Most commonly used in competitive programming
+     */
+    public List<Integer> findAnagrams(String s, String p) {
+        List<Integer> result = new ArrayList<>();
+        
+        // Edge case: if p is longer than s, no anagrams possible
+        if (p.length() > s.length()) {
+            return result;
+        }
+        
+        // Step 1: Create frequency arrays
+        // Index 0 represents 'a', index 1 represents 'b', ..., index 25 represents 'z'
+        int[] pCount = new int[26];
+        int[] windowCount = new int[26];
+        
+        // Step 2: Build frequency array for pattern p
+        for (char c : p.toCharArray()) {
+            pCount[c - 'a']++;  // Convert char to index: 'a'->0, 'b'->1, etc.
+        }
+        
+        int windowSize = p.length();
+        
+        // Step 3: Build frequency array for first window
+        for (int i = 0; i < windowSize; i++) {
+            windowCount[s.charAt(i) - 'a']++;
+        }
+        
+        // Step 4: Check if first window is an anagram
+        if (Arrays.equals(pCount, windowCount)) {
+            result.add(0);
+        }
+        
+        // Step 5: Slide the window through rest of string s
+        for (int i = windowSize; i < s.length(); i++) {
+            // Add new character entering the window (right side)
+            windowCount[s.charAt(i) - 'a']++;
+            
+            // Remove old character leaving the window (left side)
+            windowCount[s.charAt(i - windowSize) - 'a']--;
+            
+            // Check if current window matches pattern p
+            if (Arrays.equals(pCount, windowCount)) {
+                // Starting index of current window
+                result.add(i - windowSize + 1);
+            }
+        }
+        
+        return result;
+    }
+}
+```
+
+---
+
+## **Summary Table**
+
+```java
+/**
+ * COMPARISON OF ALL APPROACHES
+ * 
+ * ┌─────────────────────┬──────────────────┬────────────┬─────────────────────────────┐
+ * │ Approach            │ Time Complexity  │ Space      │ Best Use Case               │
+ * ├─────────────────────┼──────────────────┼────────────┼─────────────────────────────┤
+ * │ 1. Brute Force      │ O(n × m log m)   │ O(m)       │ Understanding the problem   │
+ * │                     │                  │            │ Small inputs                │
+ * ├─────────────────────┼──────────────────┼────────────┼─────────────────────────────┤
+ * │ 2. HashMap Window   │ O(n)             │ O(1)       │ Interview recommended       │
+ * │                     │                  │            │ Any character set           │
+ * │                     │                  │            │ Clean & readable            │
+ * ├─────────────────────┼──────────────────┼────────────┼─────────────────────────────┤
+ * │ 3. Array Window     │ O(n)             │ O(1)       │ Fastest execution           │
+ * │                     │                  │            │ Lowercase letters only      │
+ * │                     │                  │            │ Competitive programming     │
+ * └─────────────────────┴──────────────────┴────────────┴─────────────────────────────┘
+ * 
+ * INTERVIEW RECOMMENDATION:
+ *   - Start by explaining Approach 1 (Brute Force)
+ *   - Optimize to Approach 2 (HashMap Sliding Window)
+ *   - Mention Approach 3 as further optimization if asked
+ */
+
+
+Does this format work for you? All three approaches with detailed comments explaining the logic, complexity, and trade-offs!
