@@ -1,0 +1,5 @@
+Constraints — size of array, range of values, +ve/-ve, empty array, duplicates allowed?
+Brute force — simplest solution, explain TC
+Intermediate — can we do better?
+Optimal — best possible solution, explain TC
+Trade offs — time vs space comparison across all approaches
