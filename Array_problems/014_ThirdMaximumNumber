@@ -1,5 +1,28 @@
 //https://leetcode.com/problems/third-maximum-number/
 
+the first approach is since they are asking for third maximum number from the array. we can sort it. and from the last we can check the thrid unique element.
+here the complexity is O(nlogn) for sorting itself and then we have to iterate from the last which is possible for O(n).so overall it is O(nlogn).
+
+BruteForce:
+class Solution {
+    public int thirdMax(int[] nums) {
+        Arrays.sort(nums);
+        int count = 1;
+        for (int i = nums.length - 2; i >= 0; i--) {
+            if (nums[i] != nums[i + 1]) {
+                count++;
+                if (count == 3) {
+                    return nums[i];
+                }
+            }
+        }
+
+        return nums[nums.length - 1];
+    }
+}
+
+
+
 class Solution {
     public int thirdMax(int[] nums) {
         long first = Long.MIN_VALUE;
