@@ -1,7 +1,35 @@
 //169. Majority Element
 //
+//Brute Force — O(n²)
+class Solution {
+    public int majorityElement(int[] nums) {
+        int n = nums.length;
+        for (int i = 0; i < n; i++) {
+            int count = 0;
+            for (int j = 0; j < n; j++) {
+                if (nums[i] == nums[j]) {
+                    count++;
+                }
+            }
+            if (count > n / 2) {
+                return nums[i];
+            }
+        }
+        return -1;
+    }
+}
+//Logic: For every element count how many times it appears. If count > n/2 return it.
 
-//BruteForce Solution: using hashmap. TC: O(n), SC: O(n)
+//Sorting — O(n log n)
+class Solution {
+    public int majorityElement(int[] nums) {
+        Arrays.sort(nums);
+        return nums[nums.length / 2];
+    }
+}
+//Logic: After sorting, majority element always occupies middle index since it appears more than n/2 times.
+
+//hashmap Solution: using hashmap. TC: O(n), SC: O(n)
 class Solution {
     public int majorityElement(int[] nums) {
 
