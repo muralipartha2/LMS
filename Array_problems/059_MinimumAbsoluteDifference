@@ -1,0 +1,55 @@
+// https://leetcode.com/problems/minimum-absolute-difference/
+
+
+// BruteForce Approach/ Naive Approach which takes O(n^2)
+class Solution {
+    public List<List<Integer>> minimumAbsDifference(int[] arr) {
+        int minDiff = Integer.MAX_VALUE;
+        for(int i = 0; i < arr.length; i++){
+            for(int j = i+1; j < arr.length; j++){
+                int absDiff = Math.abs(arr[i] - arr[j]);
+                minDiff = Math.min(minDiff, absDiff);
+            }
+        }
+
+        List<List<Integer>> results = new ArrayList<>();
+        for(int i = 0; i < arr.length; i++){
+            for(int j = i+1; j < arr.length; j++){
+                if(Math.abs(arr[i] - arr[j]) == minDiff){
+                    results.add(Arrays.asList(
+    Math.min(arr[i], arr[j]),
+    Math.max(arr[i], arr[j])));
+                }
+            }
+        }
+        
+        results.sort((a, b) -> a.get(0) - b.get(0));
+        return results;
+    }
+}
+
+
+//final Optimal Solution: O(n logn)
+// sort the array first here and then find the minDiff between adjacent. then later see if the diff of elements is equal to minDiff
+// if yes add to results.
+
+class Solution {
+    public List<List<Integer>> minimumAbsDifference(int[] arr) {
+        
+        Arrays.sort(arr);
+        int minDiff=Integer.MAX_VALUE;
+        for(int i=1;i<arr.length;i++){
+            minDiff=Math.min(minDiff,(arr[i] - arr[i-1]));
+        }
+
+        List<List<Integer>> results=new ArrayList<>();
+
+        for(int i=1;i<arr.length;i++){
+            if((arr[i] - arr[i-1]) == minDiff){
+                results.add(Arrays.asList(arr[i-1],arr[i]));
+            }
+        }
+
+        return results;
+    }
+}
