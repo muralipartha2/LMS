@@ -3,37 +3,37 @@
 
 ## "Why switch now?"
 
-> "I have got 8 years in telecom and I feel I have squeezed the most out of this domain. I am at a point where I want a bigger challenge, better growth and honestly better compensation too. So this feels like the right time."
+> "Its been 8 years in telecom and I feel squeezed at this point where I want a bigger challenge, better growth and honestly better compensation too. So this feels like the right time."
 
 ---
 
 ## "Why so soon? Only 1 year at current company?"
 
-> "Fair question — but my overall journey is 8 years, not 1. I joined this role expecting certain growth but things did not shape up the way I anticipated. I am someone who would rather act early than wait and regret later."
+> "yeah thats a fair question. I joined this role expecting certain growth but things did not shape up the way I anticipated. so Ive started looking out early rather wait."
 
 ---
 
 ## "Are you being laid off?"
 
-> "Not at all. I put in my resignation myself. Completely voluntary. I have had a stable 8 year run and this is purely my own decision for career growth."
+> "Not at all. I put in my resignation myself. Completely voluntary. I have had a stable 8 year run and this is purely my own decision."
 
 ---
 
 ## "Moving out of telecom — won't you go back?"
 
-> "Telecom gave me a strong engineering foundation — distributed systems, cloud-native Java, large scale backend work. These skills travel well across domains. I am genuinely looking to apply them in a broader context now and I am not looking back."
+> "Telecom gave me a strong engineering foundation — distributed systems, cloud-native Java, large scale backend work. These skills travel well across domains. I am genuinely looking to apply them in a broader context now."
 
 ---
 
 ## "What is your expected salary?"
 
-> "Based on my experience and what the market looks like, I am targeting somewhere around X to Y. But I am open to talking through the full package — there is some flexibility depending on the role and growth potential."
+> "Based on my experience and what the market looks like, I am targeting somewhere around 40 LPA. But I am open to talking through the full package — there is some flexibility depending on the role and growth potential."
 
 ---
 
 ## "Where do you see yourself in 5 years?"
 
-> "Honestly, I want to be someone who is solving hard engineering problems at scale and helping the team around me grow. Whether that is a senior engineer or architect role, I am open — I care more about impact than the title."
+> "I want to be someone who is solving hard engineering problems at scale and helping the team around me grow. Whether that is a senior engineer or architect role, I am open — I care more about impact than the title."
 
 ---
 
@@ -68,5 +68,3 @@ If still too rigid:
 > "I understand. I do like the opportunity but I also need the move to make financial sense for me. Let me think it over and come back to you."
 
 ---
-
-Read through and let me know if any answer needs a different tone or angle! 🙂
