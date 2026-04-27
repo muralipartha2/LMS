@@ -1,0 +1,52 @@
+//LeetCode 59 — Spiral Matrix II
+//Problem
+//Given n, fill an n×n matrix with numbers 1 to n² in spiral order (clockwise, starting from top-left).
+//Approach — Boundary Simulation
+//Maintain four shrinking boundaries: top, bottom, left, right. Each pass fills one full layer of the spiral, then contracts the corresponding boundary inward.
+//Four traversal directions per layer:
+//Left → Right along top row, then top++
+//Top → Bottom along right column, then right--
+//Right → Left along bottom row, then bottom--
+//Bottom → Top along left column, then left++
+//Repeat while num <= n².
+
+
+// only solution
+class Solution {
+    public int[][] generateMatrix(int n) {
+        int[][] square_matrix=new int[n][n];
+        int num=1;
+        int left, right, bottom, top;
+        left=top=0;
+        bottom=right=n-1;
+
+        while(num <= (n*n)){
+
+            for(int i=left;i<= right;i++){
+                square_matrix[top][i]=num;
+                num++;
+            }
+            top++;
+
+            for(int i=top;i<=bottom;i++){
+                square_matrix[i][right]=num;
+                num++;
+            }
+            right--;
+
+            for(int i=right; i>=left;i--){
+                square_matrix[bottom][i]=num;
+                num++;
+            }
+            bottom--;
+
+            for(int i=bottom; i>=top;i--){
+                square_matrix[i][left]=num;
+                num++;
+            }
+            left++;
+            
+        }
+        return square_matrix;
+    }
+}
