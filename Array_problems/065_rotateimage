@@ -1,0 +1,84 @@
+//https://leetcode.com/problems/rotate-image/
+
+
+// brute force solution
+// actual problem demands in-place modification but still we do
+// this approach to understand
+class Solution {
+    public void rotate(int[][] matrix) {
+        int n=matrix.length;
+        int[][] rotated=new int[n][n];
+
+        for(int i=0;i<n;i++){
+            for(int j=0;j<n;j++){
+                rotated[j][n-1-i]= matrix[i][j];
+            }
+        }
+
+        for(int i=0;i<n;i++){
+            for(int j=0;j<n;j++){
+                matrix[i][j]= rotated[i][j]; 
+            }
+        }
+    }
+}
+
+// transpose matrix and reverse row approach
+// only transpose the upper triangle(j>i) of the matrix
+// and then reverse each row
+// which will result in rotating 90 degree
+// we can achieve this in-place as the problem expects
+class Solution {
+    public void rotate(int[][] matrix) {
+        int n=matrix.length;
+
+        for(int i=0;i<n;i++){
+            for(int j=i+1;j<n;j++){
+                int temp= matrix[i][j];
+                matrix[i][j]= matrix[j][i];
+                matrix[j][i]=temp;
+            }
+        }
+
+        for(int i=0;i<n;i++){
+            int left=0,right=n-1;
+            while(left<right){
+                int temp = matrix[i][left];
+                matrix[i][left]= matrix[i][right];
+                matrix[i][right]=temp;
+                left++;
+                right--;
+            }
+        }
+    }
+}
+
+
+
+
+// Rotate Image — Four-Way Cycle Swap
+
+//### Core Idea
+//In a 90° clockwise rotation, four elements always cycle into each other's positions:
+//Top → Right → Bottom → Left → Top
+//So instead of two passes (transpose + reverse), rotate all four elements in one shot.
+---
+//### Why n/2 layers?
+//The matrix can be visualised as concentric rings like an onion. Only the outer `n/2` rings need rotation — the center cell of an odd matrix maps to itself and never moves. Going beyond `n/2` would re-rotate already completed elements.
+---
+//### Why does the cycle work?
+//For any element at `(i,j)`, a 90° clockwise rotation maps it to `(j, n-1-i)`. Applying this formula four times brings it back to `(i,j)`. So exactly four elements form a closed cycle — one `temp` variable is enough to rotate all four in sequence.
+
+
+public void rotate(int[][] matrix) {
+    int n = matrix.length;
+    for(int i = 0; i < n/2; i++){
+        for(int j = i; j < n-1-i; j++){
+            int temp = matrix[i][j];
+            matrix[i][j] = matrix[n-1-j][i];
+            matrix[n-1-j][i] = matrix[n-1-i][n-1-j];
+            matrix[n-1-i][n-1-j] = matrix[j][n-1-i];
+            matrix[j][n-1-i] = temp;
+        }
+    }
+}
