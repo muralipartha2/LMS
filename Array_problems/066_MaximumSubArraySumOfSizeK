@@ -1,0 +1,41 @@
+//https://www.geeksforgeeks.org/problems/max-sum-subarray-of-size-k5313/1
+
+//Bruteforce solution
+class Solution {
+    public int maxSubarraySum(int[] arr, int k) {
+        int n = arr.length;
+        int maxSum = Integer.MIN_VALUE;
+        
+        for(int i = 0; i < n; i++) {
+            int subArrSum = 0;
+            for(int j = i; j < (i + k) && j < n; j++) {
+                subArrSum += arr[j];
+            }
+            maxSum = Math.max(subArrSum, maxSum);
+        }
+        
+        return maxSum;
+    }
+}
+
+// optimal solution 1
+// having a sliding window of size k
+class Solution {
+    public int maxSubarraySum(int[] arr, int k) {
+        int n = arr.length;
+        int subArrSum = 0;
+
+        for(int i = 0; i < k; i++) {
+            subArrSum += arr[i];
+        }
+
+        int maxSum = subArrSum;
+
+        for(int i = k; i < n; i++) {
+            subArrSum = subArrSum + arr[i] - arr[i-k];
+            maxSum = Math.max(subArrSum, maxSum);
+        }
+
+        return maxSum;
+    }
+}
