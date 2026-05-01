@@ -1,0 +1,116 @@
+// www.geeksforgeeks.org/problems/longest-k-unique-characters-substring0853
+
+//Brute force approach to check all the substring while checking the unqiue characters
+// TC O(n^2) SC O(k)
+class Solution {
+    public int longestKSubstr(String s, int k) {
+        // code here
+        if(k>s.length())
+          return -1;
+         
+        if(s.length() == 0)
+          return -1;
+        
+        
+        int ans=-1;
+        
+        
+        for(int i=0;i<s.length();i++){
+            Map<Character,Integer> map=new HashMap<>();
+            for(int j=i;j<s.length() && map.size()<=k;j++){
+              char c=s.charAt(j);
+              map.put(c,map.getOrDefault(c,0)+1);
+              if(map.size() == k){
+                ans=Math.max(ans,j-i+1);
+              }
+            }
+        }
+        return ans;
+    }
+}
+
+// optimal solution with hashmap using sliding window technique
+//// TC O(n) SC O(k)
+class Solution {
+    public int longestKSubstr(String s, int k) {
+        // code here
+        if(k>s.length())
+          return -1;
+         
+        if(s.length() == 0)
+          return -1;
+        
+        Map<Character,Integer> map=new HashMap<>();
+        int start,end;
+        start=end=0;
+        int ans=-1;
+        
+        while(end < s.length()){
+            char c=s.charAt(end);
+            map.put(c,map.getOrDefault(c,0)+1);
+            
+            if(map.size() > k){
+            map.put(s.charAt(start),map.get(s.charAt(start))-1);
+            if(map.get(s.charAt(start)) == 0){
+                map.remove(s.charAt(start));
+            }
+            start++;
+            }
+            
+            if(map.size() == k){
+                ans=Math.max(ans,end-start +1 );
+            }
+            end++;
+        }
+        
+        return ans;
+    }
+}
+
+// final optimal solution with array instead of hashmap
+// TC O(n) SC reduced to O(1) because we use arr[26].
+class Solution {
+    public int longestKSubstr(String s, int k) {
+        // code here
+        if(k>s.length())
+          return -1;
+         
+        if(s.length() == 0)
+          return -1;
+        
+        int charArr[]=new int[26];
+        int distinctCount=0;
+        int start,end;
+        start=end=0;
+        int ans=-1;
+        
+        while(end < s.length()){
+            char c=s.charAt(end);
+            
+            if(charArr[c - 'a'] == 0){
+                distinctCount++;
+            }
+            
+            charArr[c - 'a']++;
+            
+            
+            if(distinctCount > k){
+            char l=s.charAt(start);
+            charArr[l - 'a']--;
+            if(charArr[l - 'a'] == 0){
+                distinctCount--;
+            }
+            start++;
+            }
+            
+            if(distinctCount == k){
+                ans=Math.max(ans,end-start +1 );
+            }
+            end++;
+        }
+        
+        return ans;
+    }
+}
+
+
