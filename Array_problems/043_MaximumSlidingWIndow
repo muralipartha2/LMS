@@ -1,0 +1,105 @@
+## LeetCode 239 — Sliding Window Maximum
+
+### Problem
+Given an array `nums` and window size `k`, return the maximum element of each sliding window as it moves from left to right.
+
+### Constraints
+- `1 <= nums.length <= 10⁵`
+- `-10⁴ <= nums[i] <= 10⁴`
+- `1 <= k <= nums.length`
+
+---
+
+### Approach 1 — Brute Force
+
+For every window of size k, scan all k elements to find the maximum. Time is O(n×k) and auxiliary space is O(1).
+
+```java
+public int[] maxSlidingWindow(int[] nums, int k) {
+    int n = nums.length;
+    int[] result = new int[n - k + 1];
+    for(int i = 0; i <= n - k; i++) {
+        int max = Integer.MIN_VALUE;
+        for(int j = i; j < i + k; j++)
+            max = Math.max(max, nums[j]);
+        result[i] = max;
+    }
+    return result;
+}
+```
+
+---
+
+### Approach 2 — Monotonic Deque, Two Loop (Cleaner)
+
+First loop builds the initial window of size k. Second loop slides the window and records the maximum at each step. Time is O(n) and auxiliary space is O(k).
+
+```java
+public int[] maxSlidingWindow(int[] nums, int k) {
+    int n = nums.length;
+    int[] result = new int[n - k + 1];
+    Deque<Integer> dq = new ArrayDeque<>();
+
+    // First loop — build initial window
+    for(int end = 0; end < k; end++) {
+        while(!dq.isEmpty() && nums[dq.peekLast()] < nums[end])
+            dq.pollLast();
+        dq.addLast(end);
+    }
+    result[0] = nums[dq.peekFirst()];
+
+    // Second loop — slide and record
+    for(int end = k; end < n; end++) {
+        if(dq.peekFirst() < end - k + 1)
+            dq.pollFirst();
+        while(!dq.isEmpty() && nums[dq.peekLast()] < nums[end])
+            dq.pollLast();
+        dq.addLast(end);
+        result[end - k + 1] = nums[dq.peekFirst()];
+    }
+    return result;
+}
+```
+
+---
+
+### Approach 3 — Monotonic Deque, Single Loop
+
+Same logic as above but combined into one loop with `end >= k-1` check to start recording. Slightly more compact but less readable than two loop approach. Time is O(n) and auxiliary space is O(k).
+
+```java
+public int[] maxSlidingWindow(int[] nums, int k) {
+    int n = nums.length;
+    int[] result = new int[n - k + 1];
+    Deque<Integer> dq = new ArrayDeque<>();
+
+    for(int end = 0; end < n; end++) {
+        while(!dq.isEmpty() && nums[dq.peekLast()] < nums[end])
+            dq.pollLast();
+        if(!dq.isEmpty() && dq.peekFirst() < end - k + 1)
+            dq.pollFirst();
+        dq.addLast(end);
+        if(end >= k - 1)
+            result[end - k + 1] = nums[dq.peekFirst()];
+    }
+    return result;
+}
+```
+
+---
+
+### Approach 4 — Monotonic Deque with LinkedList
+
+Same logic as Approach 2 but using LinkedList instead of ArrayDeque. Both implement Deque so the code is identical except the declaration. ArrayDeque is preferred in practice for better cache performance and lower memory overhead since LinkedList maintains prev and next pointers for every node.
+
+```java
+Deque<Integer> dq = new LinkedList<>();
+```
+
+Rest of the code remains exactly the same as Approach 2 or 3.
+
+---
+
+### Overall Comparison
+
+Brute force at O(n×k) is too slow for n up to 10⁵. PriorityQueue improves this to O(n log k) but removing expired elements from the heap is costly. Monotonic Deque achieves optimal O(n) by discarding elements that can never be the maximum — each element is added and removed at most once across the entire traversal. ArrayDeque is the preferred implementation over LinkedList for better performance.
