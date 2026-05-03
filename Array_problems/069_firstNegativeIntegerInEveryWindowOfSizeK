@@ -1,0 +1,117 @@
+Sure! Here's your GitHub write-up.
+
+---
+
+## GFG — First Negative Integer in Every Window of Size K
+
+### Problem
+Given an array and window size k, find the first negative integer in every window of size k. If no negative integer exists in a window, output 0.
+
+### Constraints
+- `1 <= arr.length <= 10⁶`
+- `-10⁵ <= arr[i] <= 10⁵`
+- `1 <= k <= arr.length`
+
+### Edge Cases
+- No negative in any window → all outputs are 0
+- All negatives → first element of each window is the answer
+- k=1 → positives become 0, negatives stay as is
+
+---
+
+### Approach 1 — Brute Force
+
+For every window of size k, scan all k elements and pick the first negative. If none found, add 0. Time is O(n×k) and auxiliary space is O(1).
+
+```java
+static List<Integer> firstNegInt(int arr[], int k) {
+    int n = arr.length;
+    List<Integer> list = new ArrayList<>();
+    for(int i = 0; i <= n-k; i++) {
+        int count = 0;
+        for(int j = i; j < i+k; j++) {
+            if(arr[j] < 0 && count == 0) {
+                list.add(arr[j]);
+                count++;
+            }
+        }
+        if(count == 0)
+            list.add(0);
+    }
+    return list;
+}
+```
+
+---
+
+### Approach 2 — Deque, Two Loops
+
+First loop builds the initial window tracking only negative indices in the Deque. Second loop slides the window, removes expired front indices, adds new negatives, and records the first negative of each window. Time is O(n) and auxiliary space is O(k).
+
+The key insight is that we only store indices of negative elements in the Deque — so the front always points to the first negative in the current window. If Deque is empty, no negative exists in that window and we output 0.
+
+```java
+static List<Integer> firstNegInt(int arr[], int k) {
+    int n = arr.length;
+    List<Integer> list = new ArrayList<>();
+    Deque<Integer> dq = new ArrayDeque<>();
+
+    // First loop — build initial window
+    for(int i = 0; i < k; i++) {
+        if(arr[i] < 0)
+            dq.addLast(i);
+    }
+
+    if(!dq.isEmpty())
+        list.add(arr[dq.peekFirst()]);
+    else
+        list.add(0);
+
+    // Second loop — slide and record
+    for(int i = k; i < n; i++) {
+        if(!dq.isEmpty() && dq.peekFirst() < i-k+1)
+            dq.pollFirst();
+        if(arr[i] < 0)
+            dq.addLast(i);
+        if(dq.isEmpty())
+            list.add(0);
+        else
+            list.add(arr[dq.peekFirst()]);
+    }
+    return list;
+}
+```
+
+---
+
+### Approach 3 — Deque, Single Loop
+
+Same logic as Approach 2 but combined into one loop with `i >= k-1` check to start recording. Cleaner and more compact. Time is O(n) and auxiliary space is O(k).
+
+```java
+static List<Integer> firstNegInt(int arr[], int k) {
+    int n = arr.length;
+    List<Integer> list = new ArrayList<>();
+    Deque<Integer> dq = new ArrayDeque<>();
+
+    for(int i = 0; i < n; i++) {
+        if(!dq.isEmpty() && dq.peekFirst() < i-k+1)
+            dq.pollFirst();
+        if(arr[i] < 0)
+            dq.addLast(i);
+        if(i >= k-1) {
+            if(dq.isEmpty())
+                list.add(0);
+            else
+                list.add(arr[dq.peekFirst()]);
+        }
+    }
+    return list;
+}
+```
+
+---
+
+### Overall Comparison
+
+Brute force at O(n×k) is straightforward but too slow for large inputs. Deque approach achieves O(n) because each element is added and removed from the Deque at most once across the entire traversal — giving O(2n) which simplifies to O(n). The single loop variant is preferred for its compactness while maintaining the same complexity.
