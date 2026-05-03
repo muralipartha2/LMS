@@ -1,0 +1,74 @@
+## GFG — Maximize Number of 1s
+
+### Problem
+Given a binary array of 0s and 1s and an integer k, find the maximum length of a subarray containing only 1s after flipping at most k zeros.
+
+### Constraints
+- `1 <= arr.length <= 10⁵`
+- `0 <= k <= arr.length`
+- Values are either 0 or 1
+
+### Edge Cases
+- `k=0` → no flips allowed, find longest existing run of 1s
+- All 1s → entire array is the answer
+- All 0s → answer is k
+
+---
+
+### Approach 1 — Brute Force
+
+For every starting index, scan forward counting zeros. Stop when zero count exceeds k. Track the maximum valid length found. Time is O(n²) and auxiliary space is O(1).
+
+```java
+public int maxOnes(int arr[], int k) {
+    int max = 0;
+    for(int i = 0; i < arr.length; i++) {
+        int count = 0;
+        int length = 0;
+        for(int j = i; j < arr.length && count <= k; j++) {
+            if(arr[j] == 0)
+                count++;
+            if(count <= k)
+                length++;
+        }
+        max = Math.max(length, max);
+    }
+    return max;
+}
+```
+
+---
+
+### Approach 2 — Sliding Window (Optimal)
+
+Maintain a variable window using left and right pointers. Expand right freely. When zero count exceeds k, shrink from left until count drops back to k. Record maximum window length at every step. Time is O(n) and auxiliary space is O(1).
+
+The key insight is that left never resets — it only moves forward. So across the entire traversal, left moves at most n times total and right moves n times — giving O(2n) = O(n).
+
+This is one of the rare sliding window problems where no extra data structure like Deque or HashMap is needed — a simple counter is sufficient.
+
+```java
+public int maxOnes(int arr[], int k) {
+    int n = arr.length;
+    int left = 0;
+    int max = 0;
+    int count = 0;
+    for(int right = 0; right < n; right++) {
+        if(arr[right] == 0)
+            count++;
+        while(count > k) {
+            if(arr[left] == 0)
+                count--;
+            left++;
+        }
+        max = Math.max(max, right - left + 1);
+    }
+    return max;
+}
+```
+
+---
+
+### Overall Comparison
+
+Brute force at O(n²) works but is too slow for large inputs. Sliding window brings it down to O(n) by maintaining a valid window at all times — expanding from right and shrinking from left only when necessary. Both approaches use O(1) auxiliary space since no extra data structures are needed.
