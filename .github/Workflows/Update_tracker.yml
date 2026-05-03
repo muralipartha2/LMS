@@ -1,0 +1,32 @@
+name: Update Revision Tracker
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  update-tracker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Run tracker generator
+        run: python scripts/generate_tracker.py
+
+      - name: Commit updated tracker
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add REVISION_TRACKER.md
+          git diff --staged --quiet || git commit -m "chore: auto-update REVISION_TRACKER.md"
+          git push
