@@ -1,0 +1,73 @@
+## LeetCode — Maximum Product Subarray
+
+### Problem
+Given an integer array nums, find the subarray that has the largest product and return the product.
+
+### Constraints
+- `1 <= nums.length <= 2×10⁴`
+- `-10 <= nums[i] <= 10`
+- Product of any subarray fits in a 32-bit integer
+
+### Edge Cases
+- Single element → return that element
+- Zeros → reset the product, treated as fresh start
+- Negative numbers → two negatives make a positive, must track minimum too
+- Single negative element → answer could be negative
+
+---
+
+### Approach 1 — Brute Force
+
+For every starting index, multiply forward and track the maximum product seen. Single elements are also considered before the inner loop starts. Time is O(n²) and auxiliary space is O(1).
+
+```java
+public int maxProduct(int[] nums) {
+    int n = nums.length;
+    int maxProduct = Integer.MIN_VALUE;
+    for(int i = 0; i < n; i++) {
+        int product = nums[i];
+        maxProduct = Math.max(product, maxProduct);
+        for(int j = i+1; j < n; j++) {
+            product *= nums[j];
+            maxProduct = Math.max(product, maxProduct);
+        }
+    }
+    return maxProduct;
+}
+```
+
+---
+
+### Approach 2 — Kadane's Adapted for Products (Optimal)
+
+This is an adaptation of Kadane's algorithm for maximum sum subarray. The key insight is that a negative number can flip the minimum product into the maximum product and vice versa. So at every index we track both the current maximum and current minimum product ending at that position.
+
+At every index three candidates exist for the new maximum and minimum:
+- The current element alone — starting fresh
+- Current maximum multiplied by current element
+- Current minimum multiplied by current element — handles negative × negative case
+
+Since currentMax is needed to compute currentMin, a temporary variable saves the old currentMax before updating. Time is O(n) and auxiliary space is O(1) — no extra data structures needed.
+
+```java
+public int maxProduct(int[] nums) {
+    int n = nums.length;
+    int currentMax = nums[0];
+    int currentMin = nums[0];
+    int maxSoFar = nums[0];
+
+    for(int i = 1; i < n; i++) {
+        int tempMax = currentMax;
+        currentMax = Math.max(nums[i], Math.max(currentMax * nums[i], currentMin * nums[i]));
+        currentMin = Math.min(nums[i], Math.min(currentMin * nums[i], tempMax * nums[i]));
+        maxSoFar = Math.max(maxSoFar, currentMax);
+    }
+    return maxSoFar;
+}
+```
+
+---
+
+### Overall Comparison
+
+Brute force at O(n²) checks every possible subarray product. The optimal approach brings this down to O(n) by recognising that at every position only three candidates matter — current element alone, extending the previous maximum, or extending the previous minimum. Both approaches use O(1) auxiliary space since no extra data structures are needed. Unlike sliding window problems, there is no intermediate approach here — the jump from brute force to optimal is direct once the min/max tracking insight is seen.
