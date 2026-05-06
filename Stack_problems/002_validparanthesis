@@ -1,0 +1,46 @@
+//https://leetcode.com/problems/valid-parentheses/?envType=problem-list-v2&envId=stack
+
+// bruteforce approach to find the pattern directly and replace it.
+// so each pass in the string and replace will create another string object
+// since string is immutable in java.
+//TC O(n^2) and SC O(n).
+class Solution {
+    
+public boolean isValid(String s) {
+    while (s.contains("()") || s.contains("{}") || s.contains("[]")) {
+        s = s.replace("()", "");
+        s = s.replace("{}", "");
+        s = s.replace("[]", "");
+    }
+    return s.isEmpty();
+}
+}
+
+//optimal approach with the use of stack.
+// if we see the pattern given is sequential and so we need to check
+// the next needed character
+// end of the iteration if the stack is not empty
+// then it is not complete.
+//TC is O(n) and SC is O(n) since we are using stack.
+class Solution {
+    public boolean isValid(String s) {
+
+        Stack<Character> stack=new Stack<>();
+        for(char c: s.toCharArray()){
+            if(c == '{' || c == '(' || c== '[' ){
+                stack.push(c);
+            } else{
+                if(stack.isEmpty())
+                    return false;
+
+                char top=stack.pop();
+
+                if(c == '}' && top != '{') return false;
+                if(c == ')' && top != '(') return false;
+                if(c == ']' && top != '[') return false;
+            }
+        }
+
+        return stack.isEmpty();
+    }
+}
