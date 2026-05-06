@@ -1,0 +1,72 @@
+// implementation 1 which is of fixed size array and simple approach having top -1.
+class Stack {
+    int[] arr;
+    int capacity;
+    int top;
+
+    Stack(int capacity) {
+        this.capacity = capacity;
+        arr = new int[capacity];
+        top = -1;
+    }
+
+    boolean isEmpty() { return top == -1; }
+    boolean isFull()  { return top == capacity - 1; }
+
+    void push(int val) {
+        if (isFull()) return;
+        arr[++top] = val;
+    }
+
+    int pop() {
+        if (isEmpty()) return -1;
+        return arr[top--];
+    }
+
+    int peek() {
+        if (isEmpty()) return -1;
+        return arr[top];
+    }
+}
+
+
+
+// implementation 2 by having a dynamic size array, make it thread safe and throw exception if reached beyond limits
+
+import java.util.Arrays;
+import java.util.EmptyStackException;
+
+class Stack {
+    private int[] arr;
+    private int capacity;
+    private int top;
+
+    Stack(int capacity) {
+        this.capacity = capacity;
+        arr = new int[capacity];
+        top = -1;
+    }
+
+    synchronized boolean isEmpty() { return top == -1; }
+    synchronized boolean isFull()  { return top == capacity - 1; }
+
+    synchronized void push(int val) {
+        if (isFull()) resize();
+        arr[++top] = val;
+    }
+
+    synchronized int pop() {
+        if (isEmpty()) throw new EmptyStackException();
+        return arr[top--];
+    }
+
+    synchronized int peek() {
+        if (isEmpty()) throw new EmptyStackException();
+        return arr[top];
+    }
+
+    private void resize() {
+        capacity = capacity * 2;
+        arr = Arrays.copyOf(arr, capacity);
+    }
+}
