@@ -1,0 +1,105 @@
+//https://leetcode.com/problems/min-stack/?envType=problem-list-v2&envId=stack
+
+// have a second stack to maintain the min always
+// Tc is O(1) SC is O(n).
+
+class MinStack {
+
+    Stack<Integer> stack;
+    Stack<Integer> tempStack;
+    public MinStack() {
+        stack=new Stack<>();
+        tempStack=new Stack<>();
+    }
+    
+    public void push(int val) {
+        if(stack.isEmpty()){
+            stack.push(val);
+            tempStack.push(val);
+        }else {
+            stack.push(val);
+            tempStack.push(Math.min(val,tempStack.peek()));
+        }
+    }
+    
+    public void pop() {
+        if(!stack.isEmpty() && !tempStack.isEmpty()){
+            stack.pop();
+            tempStack.pop();
+        }
+    }
+    
+    public int top() {
+        if(!stack.isEmpty()){
+           return stack.peek();
+        }
+        return -1;
+    }
+    
+    public int getMin() {
+        if(!tempStack.isEmpty()){
+            return tempStack.peek();
+        }
+        return -1;
+    }
+}
+
+
+
+//to maintain the min value always, we are creating a pair DS.
+// so that anytime when we insert we can simply have the min element sofar
+// seen along with the element.
+// so while getMin will be easy.
+//TC is O(1) SC is O(n).
+class Pair{
+    int key;
+    int value;
+    public Pair(int key, int value){
+        this.key=key;
+        this.value=value;
+    }
+
+    public int getKey(){
+        return this.key;
+    }
+
+    public int getValue(){
+        return this.value;
+    }
+}
+class MinStack {
+
+    Stack<Pair> stack;
+    public MinStack() {
+        stack=new Stack();
+    }
+    
+    public void push(int val) {
+        if(stack.isEmpty()){
+            stack.push(new Pair(val,val));
+        }else{
+            int current=stack.peek().getValue();
+            stack.push(new Pair(val, Math.min(current,val)));
+        }
+    }
+    
+    public void pop() {
+        if(!stack.isEmpty()){
+            stack.pop();
+        }
+    }
+    
+    public int top() {
+        if(!stack.isEmpty()){
+           return stack.peek().getKey();
+        }
+        return -1;
+    }
+    
+    public int getMin() {
+        if(!stack.isEmpty()){
+            return stack.peek().getValue();
+        }
+        return -1;
+    }
+}
