@@ -1,0 +1,95 @@
+// same problem as minstack, but this one has a extra method called popmax() also where we need to pop the max element
+// with the current stack. this becomes the challenging part here when compared to the minstack.
+
+// brute force approach having 2 separate stacks.
+
+
+// since this problem was only available in premium, used leetcode playground to code by getting skeleton code from claude.
+public class Main {
+    public static void main(String[] args) {
+        MaxStack mx=new MaxStack();
+        mx.push(5);
+        mx.push(1);
+        mx.push(3);
+        System.out.println(mx.top());
+        System.out.println(mx.peekMax());
+        System.out.println(mx.popMax());
+        System.out.println(mx.top());
+        System.out.println(mx.peekMax());
+        System.out.println(mx.pop());
+        System.out.println(mx.top());
+    }
+}
+
+class MaxStack {
+
+    // two stacks — declare them here
+    Stack<Integer> stack;
+    Stack<Integer> maxStack;
+
+    public MaxStack() {
+        stack=new Stack<>();
+        maxStack=new Stack<>();
+    }
+
+    public void push(int val) {
+        // push to main stack
+        // push max(val, maxStack.peek()) to maxStack
+        // handle empty maxStack case
+            stack.push(val);
+        if(maxStack.isEmpty()){
+            maxStack.push(val);
+        }else{
+            maxStack.push(Math.max(val,maxStack.peek()));
+        }
+            
+    }
+
+    public int pop() {
+        if(!stack.isEmpty() && !maxStack.isEmpty()){
+            maxStack.pop();
+            return stack.pop();
+        }
+        return -1;
+        
+    }
+
+    public int top() {
+        // peek main stack
+        if(!stack.isEmpty()){
+            return stack.peek();
+        }
+        return -1;
+    }
+
+    public int peekMax() {
+        // peek maxStack
+        if(!maxStack.isEmpty()){
+            return maxStack.peek();
+        }
+        return -1;
+    }
+
+    public int popMax() {
+        // 1. find max via maxStack.peek()
+        // 2. temp stack to hold displaced elements
+        // 3. pop until top == max
+        // 4. pop the max itself from both stacks
+        // 5. push temp elements back using push() not stack.push()
+        // 6. return max
+        if(!maxStack.isEmpty()){
+        Stack<Integer> tempStack=new Stack<Integer>();
+        int valueUntil=maxStack.peek();
+        while(!stack.peek().equals(valueUntil)){
+            maxStack.pop();
+            tempStack.push(stack.pop());
+        }
+        maxStack.pop();
+        stack.pop();
+        while(!tempStack.isEmpty())
+            push(tempStack.pop());
+        return valueUntil;
+        }
+        return -1;
+    }
+}
