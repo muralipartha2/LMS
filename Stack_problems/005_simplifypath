@@ -1,0 +1,30 @@
+//leetcode.com/problems/simplify-path/?envType=problem-list-v2&envId=stack
+
+// "Brute force would be repeated string replacement — replace // with /, /./ with /, handle /../ by removing the previous segment. But this requires multiple passes, is O(n²), and has many tricky edge cases. The stack approach is cleaner, O(n), and handles all cases naturally by splitting on / first."
+
+// optimal approach is to have a split made on '/' which basically removes to multiple splits
+// so that it will be easy to handle.
+// we have multiple runs like --> O(n) splitting + O(n) stacking it + O(n) reconstructing it
+// TC is O(n) and SC is O(n) because we use stack which carries atmost n elements after the splitting.
+class Solution {
+    public String simplifyPath(String path) {
+        Stack<String> stack=new Stack<>();
+        String[] arr=path.split("/");
+        for(String str: arr){
+            if(str.equals("..")){
+                if(!stack.isEmpty())
+                stack.pop();
+            }else if(str.equals("") || str.equals(".")){
+            }else{
+                stack.push(str);
+            }
+        }
+
+        StringBuilder sb=new StringBuilder();
+        for(String str: stack){
+            sb.append("/").append(str);
+        }
+
+        return sb.length() == 0 ? "/":sb.toString();
+    }
+}
