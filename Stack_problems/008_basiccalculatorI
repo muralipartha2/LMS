@@ -1,0 +1,56 @@
+// https://leetcode.com/problems/basic-calculator/
+
+/*
+ * Approach: Stack + Sign tracking
+ *
+ * Variables:
+ *   num    → builds multi-digit numbers
+ *   sign   → 1 for positive, -1 for negative
+ *   result → running result of current expression
+ *   stack  → saves outer context when entering ()
+ *
+ * Logic:
+ *   digit   → build num
+ *   + or -  → absorb num into result, update sign
+ *   (       → push result and sign, reset both
+ *   )       → finish inner result, pop and restore outer
+ *   end     → result + sign * num handles last number
+ */
+
+class Solution {
+    public int calculate(String s) {
+        int result = 0;
+        int sign = 1; // keeping sign as 1 to denote + and -1 to denote -.
+        int num=0;
+
+        Stack<Integer> stack=new Stack<>();
+
+        for(char c : s.toCharArray()){
+            if(Character.isDigit(c)){
+                num = num * 10 + (c - '0');
+            }else if (c == '+'){
+                result += sign * num;
+                sign = 1;
+                num = 0;
+            }else if (c == '-'){
+                result += sign * num;
+                sign = -1;
+                num = 0;
+            }else if (c == '(') {
+                stack.push(result);
+                stack.push(sign);
+                result = 0;
+                sign = 1;
+            }else if (c == ')'){
+                result += sign * num;
+                num = 0;
+                int prevSign = stack.pop();
+                int prevResult = stack.pop();
+                result = prevResult + prevSign * result;
+            }
+        }
+
+        return result + sign * num;
+        
+    }
+}
