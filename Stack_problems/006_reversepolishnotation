@@ -1,0 +1,36 @@
+// leetcode.com/problems/evaluate-reverse-polish-notation/?envType=problem-list-v2&envId=stack
+
+// brute force and the optimal approach since we have to follow a sequence of operations whenever a operand is met
+// important thing here is to perform operations with left and right integer in order
+// otherwise we will face some negative or invalid division results
+
+class Solution {
+    public int evalRPN(String[] tokens) {
+
+        Stack<Integer> stack = new Stack<Integer>();
+        for (String t : tokens) {
+            if (t.equals("+") || t.equals("-") || t.equals("*") || t.equals("/")) {
+                int b = stack.pop();
+                int a = stack.pop();
+                switch (t) {
+                    case "+":
+                        stack.push(a + b);
+                        break;
+                    case "-":
+                        stack.push(a - b);
+                        break;
+                    case "*":
+                        stack.push(a * b);
+                        break;
+                    case "/":
+                        stack.push(a / b);
+                        break;
+                }
+            } else {
+                stack.push(Integer.parseInt(t));
+            }
+        }
+
+        return stack.pop();
+    }
+}
