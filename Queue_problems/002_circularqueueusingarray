@@ -1,0 +1,78 @@
+// implementation of queue of using a simple array where it has some drawbacks
+// where it is fixed kind and have some inconsistency when addinng new elements
+// even if there are some space available in the queue.
+
+
+public class Main {
+    public static void main(String[] args) {
+        CircularQueue sq= new CircularQueue(5);
+        sq.isEmpty();
+        sq.offer(10);
+        sq.offer(20);
+        sq.offer(30);
+        sq.show();
+        sq.offer(40);
+        sq.offer(50);
+        sq.show();
+        sq.isEmpty();
+        sq.poll();
+        sq.show();
+        sq.offer(60);
+        sq.show();
+    }
+}
+class CircularQueue {
+    private int[] arr;
+    private int front;
+    private int rear;
+    private int size;
+    private int capacity;
+    
+    public CircularQueue(int capacity){
+        this.capacity = capacity;
+        arr = new int[capacity];
+        front =0;
+        rear = -1;
+        size = 0;
+        }
+    
+    public void offer(int val){
+        if(size == capacity) {
+            System.out.println("Queue is full");
+            return;
+        }
+        rear=(rear + 1)% capacity;
+        arr[rear] = val;
+        size++;
+    }
+    
+    public int poll(){
+        if (size == 0) {
+            System.out.println("Queue is empty");
+            return -1;
+        }
+        int val = arr[front];
+        arr[front] =0;
+        front=(front + 1)% capacity;
+        size--;
+        return val;
+    }
+    
+    public int peek() {
+        if(size == 0) return -1;
+        return arr[front];
+    }
+    
+    public boolean isEmpty(){
+        return size == 0;
+    }
+    
+    //just to see what are the elements present
+    public void show(){
+        System.out.println();
+        for(int i=0;i<size;i++){
+            int index=(front +i)%capacity;
+            System.out.print("->"+arr[index]+"-");
+        }
+    }
+}
