@@ -1,0 +1,102 @@
+// "static void main" must be defined in a public class.
+public class Main {
+    public static void main(String[] args) {
+        CircularDeque dq = new CircularDeque(5);
+dq.offerLast(10);
+dq.offerLast(20);
+dq.offerFirst(5);
+dq.offerFirst(1);
+dq.show();
+// expected front to rear: [1, 5, 10, 20]
+System.out.println(dq.peekFirst()); // 1
+System.out.println(dq.peekLast());  // 20
+dq.pollFirst();
+dq.pollLast();
+dq.show();
+// expected: [5, 10]
+System.out.println(dq.peekFirst()); // 5
+System.out.println(dq.peekLast());  // 10
+    }
+}
+class CircularDeque {
+    private int[] arr;
+    private int front;
+    private int rear;
+    private int size;
+    private int capacity;
+
+    // constructor
+    public CircularDeque(int capacity){
+        this.arr=new int[capacity];
+        this.capacity= capacity;
+        this.front=0;
+        this.rear=-1;
+        this.size=0;
+    }
+    // offerFirst
+    public void offerFirst(int val){
+        front=(front - 1 + capacity)%capacity;
+        arr[front]=val;
+        size++;
+    }
+    
+    // offerLast
+    public void offerLast(int val){
+        rear= (rear+1) % capacity;
+        arr[rear]=val;
+        size++;
+    }
+    
+    // pollFirst
+    public int pollFirst(){
+        if(isEmpty())
+            return -1;
+        
+        int val=arr[front];
+        arr[front]=-1;
+        front=(front +1) % capacity;
+        size--;
+        return val;
+    }
+    
+    // pollLast
+    public int pollLast(){
+        if(isEmpty())
+            return -1;
+        
+        int val=arr[rear];
+        arr[rear]=-1;
+        rear=(rear - 1 + capacity) % capacity;
+        size--;
+        return val;
+    }
+    // peekFirst
+    public int peekFirst(){
+        if(isEmpty())
+            return -1;
+        return arr[front];
+    }
+    // peekLast
+    public int peekLast(){
+        if(isEmpty())
+            return -1;
+        return arr[rear];
+    }
+    
+    // isEmpty
+    public boolean isEmpty(){
+        return size == 0;
+    }
+    
+    // isFull
+    public boolean isFull(){
+        return size == capacity;
+    }
+    
+    public void show(){
+        for(int i=0;i<capacity;i++){
+            System.out.print("->"+ arr[i]);
+        }
+        System.out.println();
+    }
+}
