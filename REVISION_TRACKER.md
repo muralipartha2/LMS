@@ -217,6 +217,38 @@
 | 068 | Longestsubstringwithkuniques | Variable Sliding Window | ⬜ | — |  |
 | 071 | Maximizenumberof1S | Variable Sliding Window | ⬜ | — |  |
 
+## Stack problems
+
+### Miscellaneous
+
+| # | Problem | Pattern | Revised | Last Revised | Notes |
+|---|---|---|---|---|---|
+| 001 | Implementstackusingarray | Miscellaneous | ⬜ | — |  |
+| 002 | Validparanthesis | Miscellaneous | ⬜ | — |  |
+| 003 | Minstack | Miscellaneous | ⬜ | — |  |
+| 004 | Maxstack | Miscellaneous | ⬜ | — |  |
+| 005 | Simplifypath | Miscellaneous | ⬜ | — |  |
+| 006 | Reversepolishnotation | Miscellaneous | ⬜ | — |  |
+| 007 | Basiccalculatorii | Miscellaneous | ⬜ | — |  |
+| 008 | Basiccalculatori | Miscellaneous | ⬜ | — |  |
+
+## Queue problems
+
+### Miscellaneous
+
+| # | Problem | Pattern | Revised | Last Revised | Notes |
+|---|---|---|---|---|---|
+| 001 | Queueimplementationusingarray | Miscellaneous | ⬜ | — |  |
+| 002 | Circularqueueusingarray | Miscellaneous | ⬜ | — |  |
+| 003 | Implementqueueusingstack | Miscellaneous | ⬜ | — |  |
+| 004 | Designcircularqueue | Miscellaneous | ⬜ | — |  |
+| 005 | Numberofrecentcalls | Miscellaneous | ⬜ | — |  |
+| 006 | Stackimplementationusingqueue | Miscellaneous | ⬜ | — |  |
+| 007 | Circulardequeimplementationusingarray | Miscellaneous | ⬜ | — |  |
+| 008 | Designcircularqueue | Miscellaneous | ⬜ | — |  |
+
+## PriorityQueue problems
+
 ---
 
 ## Revision Progress Summary
@@ -235,7 +267,7 @@
 | Matrix + Boundary Simulation | 1 | 0 | 1 |
 | Matrix + Transpose + Reverse | 1 | 0 | 1 |
 | Matrix Traversal | 1 | 0 | 1 |
-| Miscellaneous | 9 | 0 | 9 |
+| Miscellaneous | 25 | 0 | 25 |
 | Prefix + Suffix | 1 | 0 | 1 |
 | Prefix Sum | 5 | 0 | 5 |
 | Prefix Sum + HashMap | 1 | 0 | 1 |
@@ -247,7 +279,7 @@
 | Two Pointer | 10 | 0 | 10 |
 | Two Pointer + Greedy | 1 | 0 | 1 |
 | Variable Sliding Window | 7 | 0 | 7 |
-| **Total** | **72** | **0** | **72** |
+| **Total** | **88** | **0** | **88** |
 
 
 ---
