@@ -1,0 +1,367 @@
+PRIORITY QUEUE
+==============
+
+WHAT:
+A queue where element with highest priority
+is served first — not FIFO.
+
+WHY/NEED:
+Normal Queue serves in insertion order.
+Real world needs ordering by priority —
+hospital emergency, CPU scheduling,
+shortest path algorithms.
+
+HOW/EVOLUTION:
+Array/LinkedList → O(n) to find min/max
+Binary Heap → O(log n) insert/delete,
+              O(1) peek
+Hence PriorityQueue uses Binary Heap internally.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+INTERNAL — BINARY HEAP:
+
+Conceptually a Complete Binary Tree.
+Physically stored as an Array.
+
+Min Heap → parent always smaller than children
+           smallest element always at root
+
+Max Heap → parent always larger than children
+           largest element always at root
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ARRAY REPRESENTATION:
+
+        1
+       / \
+      3   2
+     / \ /
+    7  5 4
+
+Array: [1, 3, 2, 7, 5, 4]
+index:  0  1  2  3  4  5
+
+PARENT-CHILD INDEX FORMULA:
+parent of i      → (i-1)/2
+left child of i  → 2*i+1
+right child of i → 2*i+2
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+OPERATIONS:
+
+1. INSERT — O(log n)
+   a. Add new element at end of array
+   b. Bubble Up (Heapify Up / Sift Up):
+      - Compare with parent
+      - If smaller than parent → swap
+      - Repeat until root or no violation
+
+   Example — insert 2 into [1,3,4,7,5]:
+   
+   Add at end → [1,3,4,7,5,2]
+   
+   i=5, parent=(5-1)/2=2, value=4
+   2 < 4 → swap → [1,3,2,7,5,4]
+   
+   i=2, parent=(2-1)/2=0, value=1
+   2 > 1 → stop
+   
+   Final: [1,3,2,7,5,4]
+
+   Code:
+   int i = size-1;
+   while(i > 0){
+     int parent = (i-1)/2;
+     if(arr[i] < arr[parent]){
+       swap(arr, i, parent);
+       i = parent;
+     } else break;
+   }
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+2. PEEK — O(1)
+   Always return arr[0] — root is always min.
+   
+   Code:
+   return arr[0];
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+3. DELETE (remove top) — O(log n)
+   a. Swap root with last element
+   b. Remove last element (size--)
+   c. Bubble Down (Heapify Down / Sift Down):
+      - Compare with both children
+      - Swap with smaller child if violated
+      - Repeat until no violation or leaf
+
+   Example — delete root from [1,3,2,7,5,4]:
+   
+   Step 1 — swap root with last:
+   swap index 0 and index 5
+   → [4,3,2,7,5,1]
+   
+   Step 2 — remove last:
+   size-- → [4,3,2,7,5]
+   
+   Step 3 — bubble down 4:
+   i=0, left=index1(3), right=index2(2)
+   smallest=2 → swap 4 and 2
+   → [2,3,4,7,5]
+   
+   i=2, left=index5(OOB), right=index6(OOB)
+   no children → stop
+   
+   Final: [2,3,4,7,5]
+
+   Code:
+   swap(arr, 0, size-1);
+   size--;
+   int i=0;
+   while(true){
+     int left=2*i+1, right=2*i+2;
+     int smallest=i;
+     if(left<size && arr[left]<arr[smallest])
+       smallest=left;
+     if(right<size && arr[right]<arr[smallest])
+       smallest=right;
+     if(smallest!=i){
+       swap(arr,i,smallest);
+       i=smallest;
+     } else break;
+   }
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+4. BUILD HEAP FROM ARRAY — O(n)
+   Instead of inserting one by one O(n log n),
+   start from last non-leaf node (n/2-1)
+   and bubble down each node.
+   
+   for(int i=n/2-1; i>=0; i--){
+     bubbleDown(i);
+   }
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+COMPLEXITY SUMMARY:
+insert    → O(log n)
+delete    → O(log n)
+peek      → O(1)
+buildHeap → O(n)
+space     → O(n)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+JAVA USAGE:
+
+// Min Heap (default)
+PriorityQueue<Integer> pq = new PriorityQueue<>();
+
+// Max Heap
+PriorityQueue<Integer> pq = 
+    new PriorityQueue<>(Comparator.reverseOrder());
+
+// Operations
+pq.offer(val);  // insert → O(log n)
+pq.poll();      // remove top → O(log n)
+pq.peek();      // view top → O(1)
+pq.size();      // count → O(1)
+pq.isEmpty();   // check → O(1)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+INTERVIEW QUESTIONS — PRIORITY QUEUE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Q1. What is a Priority Queue and how is it 
+    different from a normal Queue?
+
+A: Normal Queue follows FIFO — first inserted 
+   is first served. Priority Queue serves element
+   with highest priority first regardless of 
+   insertion order. In Java's default PriorityQueue,
+   smallest element has highest priority (Min Heap).
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Q2. What is the internal data structure of 
+    Java's PriorityQueue?
+
+A: Binary Min Heap — a complete binary tree
+   stored as an array where parent is always
+   smaller than its children. Smallest element
+   always sits at root (index 0).
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Q3. Why is Binary Heap stored as an array 
+    and not as actual tree nodes?
+
+A: Array storage avoids pointer overhead
+   (no left/right node references needed).
+   Parent-child relationship is derived
+   mathematically:
+   parent      → (i-1)/2
+   left child  → 2*i+1
+   right child → 2*i+2
+   This gives better cache performance and
+   lower memory usage than node based storage.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Q4. What is the difference between 
+    Min Heap and Max Heap?
+
+A: Min Heap → parent always smaller than 
+              children, smallest at root.
+              Java default PriorityQueue.
+   
+   Max Heap → parent always larger than
+              children, largest at root.
+              PriorityQueue(Comparator.reverseOrder())
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Q5. What is Heapify Up and when is it used?
+
+A: Heapify Up (Bubble Up / Sift Up) is used
+   during INSERT operation.
+   After adding new element at end of array,
+   it is compared with its parent repeatedly
+   and swapped upward until heap property
+   is restored.
+   Time complexity → O(log n)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Q6. What is Heapify Down and when is it used?
+
+A: Heapify Down (Bubble Down / Sift Down) is
+   used during DELETE operation.
+   After swapping root with last element and
+   removing last, new root is compared with
+   both children and swapped with smaller child
+   repeatedly until heap property is restored.
+   Time complexity → O(log n)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Q7. Why do we swap root with last element 
+    during delete instead of just removing root?
+
+A: Binary Heap must always be a complete binary
+   tree — no gaps allowed. If we remove root
+   directly, tree structure breaks. Swapping with
+   last element maintains complete binary tree
+   structure, then we restore heap property
+   via Heapify Down.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Q8. During Heapify Down, which child do we 
+    swap with — left or right?
+
+A: Always swap with the SMALLER child in Min Heap
+   (LARGER child in Max Heap).
+   Reason — swapping with larger child would
+   violate heap property as larger child would
+   become parent of smaller child.
+   
+   Code:
+   int smallest = i;
+   if(left<size && arr[left]<arr[smallest])
+     smallest=left;
+   if(right<size && arr[right]<arr[smallest])
+     smallest=right;
+   if(smallest!=i) swap(arr,i,smallest);
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Q9. What is Build Heap and why is it O(n) 
+    and not O(n log n)?
+
+A: Build Heap converts an existing array into
+   a valid heap by applying Heapify Down from
+   last non-leaf node (n/2-1) to root.
+   
+   It is O(n) because most nodes are at bottom
+   levels and need very few swaps. Only root
+   needs log n swaps. Mathematically the sum
+   of all swaps converges to O(n).
+   
+   vs inserting one by one → O(n log n)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Q10. What is the difference between 
+     heap memory and heap data structure?
+
+A: Heap memory → area of RAM where Java objects
+                 are dynamically allocated via
+                 new keyword. Managed by GC.
+   
+   Heap data structure → complete binary tree
+                         stored as array used
+                         internally by PriorityQueue.
+   
+   Same word — completely different concepts.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Q11. What are other types of Heaps apart 
+     from Binary Heap?
+
+A: Fibonacci Heap → used in advanced Dijkstra,
+                    O(1) amortized decrease-key
+   Binomial Heap  → mergeable heaps
+   Ternary Heap   → 3 children, shallower tree,
+                    cache optimized
+   
+   In practice — Binary Heap is used 99% of
+   the time in interviews and production code.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Q12. What is the time and space complexity 
+     of PriorityQueue operations?
+
+A: offer()     → O(log n)
+   poll()      → O(log n)
+   peek()      → O(1)
+   size()      → O(1)
+   isEmpty()   → O(1)
+   buildHeap   → O(n)
+   space       → O(n)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Q13. Is PriorityQueue thread safe in Java?
+
+A: No. PriorityQueue is not thread safe.
+   For thread safe alternative use:
+   PriorityBlockingQueue<Integer> pbq = 
+     new PriorityBlockingQueue<>();
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Q14. Can PriorityQueue store duplicate values?
+
+A: Yes. PriorityQueue allows duplicate values
+   unlike Set. Duplicates are treated as
+   separate elements with same priority.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Q15. Can PriorityQueue store null values?
+
+A: No. PriorityQueue does not allow null.
+   Throws NullPointerException if null
+   is inserted. This is because comparison
+   is needed for ordering and null cannot
+   be compared.
