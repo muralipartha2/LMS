@@ -16,6 +16,9 @@ from datetime import date
 # Add new folders here as you expand beyond arrays
 PROBLEM_FOLDERS = [
     "Array_problems",
+    "Stack_problems",
+    "Queue_problems",
+    "PriorityQueue_problems"
     # "String_problems",
     # "LinkedList_problems",
     # "Tree_problems",
