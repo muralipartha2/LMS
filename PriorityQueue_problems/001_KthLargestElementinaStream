@@ -1,5 +1,59 @@
 //leetcode.com/problems/kth-largest-element-in-a-stream/?envType=problem-list-v2&envId=heap-priority-queue
 
+// BruteForce Approach,
+// add the elements to a list, sort it in descnding order
+// during every add() return the k-1 index from the list.
+// TC is O(n logn ) since we are sorting for every add() operation
+// SC is O(n) list holding the n number of elements
+class KthLargest {
+    List<Integer> list;
+    int k;
+    public KthLargest(int k, int[] nums) {
+        this.k=k;
+        list = new ArrayList<>();
+        for(int num: nums){list.add(num);}
+    }
+    
+    public int add(int val) {
+        list.add(val);
+        Collections.sort(list, Comparator.reverseOrder());
+        return list.get(k-1);
+    }
+}
+
+
+// Intermediate Approach
+// we are using binary sosrt here to reduce the time complexity
+// TC is O(n)
+// SC is O(n)
+class KthLargest {
+    List<Integer> list;
+    int k;
+    public KthLargest(int k, int[] nums) {
+        this.k=k;
+        this.list=new ArrayList<>();
+        for(int num: nums){list.add(num);}
+        Collections.sort(list, Comparator.reverseOrder());
+    }
+    
+    public int add(int val) {
+        int left=0, right=list.size();
+        while(left < right){
+            int mid=(left+ right)/2;
+            if(list.get(mid) < val) right=mid;
+            else left = mid+1;
+        }
+        list.add(left, val);
+        return list.get(k-1);
+    }
+}
+
+
+//Optimal approach using the heap min.
+// it will maintaint always the max k elements
+// TC is O(n log k) this is because during every insert bubblingup happens to maintain min
+// SC is O(k), priority queue is what we have which we use to maintain k elements atmost
+
 class KthLargest {
     PriorityQueue<Integer> pq;
     int heapSize;
