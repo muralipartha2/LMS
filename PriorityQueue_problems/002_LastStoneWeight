@@ -60,3 +60,25 @@ class Solution {
         
     }
 }
+
+
+// Optimal Approach with the use of MaxHeap
+// maxheap covers things here so we can simply offer and poll
+// TC is O(n logn) since we are insertin which involves bubbling
+// SC is O(n) is which is priority queue
+class Solution {
+    public int lastStoneWeight(int[] stones) {
+        Queue<Integer> pq=new PriorityQueue(Comparator.reverseOrder());
+        for(int stone:stones){pq.offer(stone);}
+        while(pq.size() > 1){
+            int last=pq.poll();
+            int lastBefore=pq.poll();
+            if(last != lastBefore){
+                pq.offer(last-lastBefore);
+            }
+        }
+
+        return pq.isEmpty() ? 0:pq.peek();
+        
+    }
+}
