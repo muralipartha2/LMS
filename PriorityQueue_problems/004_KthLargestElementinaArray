@@ -1,0 +1,27 @@
+//https://leetcode.com/problems/kth-largest-element-in-an-array/?envType=problem-list-v2&envId=heap-priority-queue
+
+
+
+// optimal approach to have min heap of size
+// poll out the elements that are less than incoming number
+// so always a queue of kth largest are maintained
+// TC is O(n log k) because here we will go n iterations but only store
+// k elements so bubbling up happens with only k elements
+// SC is O(k)
+class Solution {
+    public int findKthLargest(int[] nums, int k) {
+        Queue<Integer> pq=new PriorityQueue();
+        for(int num: nums){
+            if(pq.size()<k)
+                pq.offer(num);
+            else{
+                if(pq.peek() < num){
+                    pq.poll();
+                    pq.offer(num);
+                }
+            }
+                
+        }
+        return pq.peek();
+    }
+}
