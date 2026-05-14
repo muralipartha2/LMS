@@ -1,0 +1,62 @@
+//leetcode.com/problems/last-stone-weight/?envType=problem-list-v2&envId=heap-priority-queue
+
+// BruteForce Approach
+// do sorting for every iteration that we can make and perform
+// removal of elements
+//TC is O(n^2 log n) because every iteration of n we are sorting.
+//SC is O(n) having a list of n elements.
+
+class Solution {
+    public int lastStoneWeight(int[] stones) {
+        List<Integer> list=Arrays.stream(stones)
+            .boxed()
+            .sorted()
+            .collect(Collectors.toList());
+
+        while(list.size() > 1){
+            int size=list.size();
+            int last=list.get(size-1);
+            int lastBefore=list.get(size-2);
+            list.remove(size-1);
+            list.remove(size-2);
+            if(last != lastBefore){
+                list.add(last - lastBefore);
+            }
+            Collections.sort(list);
+        }
+
+        return list.isEmpty() ? 0:list.get(0);
+        
+    }
+}
+
+//Intermediate Approach
+// from the previous approach we are performing binarsearch during stone merge
+// instead of sorting everytime.
+// TC is O(n^2) since binarysearch takes place for every n, where binary search itself is // for n elements
+// SC is O(n)
+class Solution {
+    public int lastStoneWeight(int[] stones) {
+        List<Integer> list=Arrays.stream(stones)
+            .boxed()
+            .sorted()
+            .collect(Collectors.toList());
+
+        while(list.size() > 1){
+            int size=list.size();
+            int last=list.get(size-1);
+            int lastBefore=list.get(size-2);
+            list.remove(size-1);
+            list.remove(size-2);
+            if(last != lastBefore){
+            int diff= last - lastBefore;
+            int pos= Collections.binarySearch(list,diff);
+            if(pos < 0) pos= -(pos + 1);
+            list.add(pos, diff);
+            }
+        }
+
+        return list.isEmpty() ? 0:list.get(0);
+        
+    }
+}
