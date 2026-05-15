@@ -1,0 +1,64 @@
+//https://leetcode.com/problems/top-k-frequent-elements/description/?envType=problem-list-v2&envId=heap-priority-queue
+
+// naive approach
+// to have arrays transferred to freqmap
+// then sort those entrySets as per values in descending order
+// and then pickup first k elements
+// m = HashMap storing unique elements
+// TC is O(n + m logm)
+// SC is O(m)
+class Solution {
+    public int[] topKFrequent(int[] nums, int k) {
+    Map<Integer, Integer> freq= new HashMap<>();
+        for(int num: nums){
+            freq.put(num,freq.getOrDefault(num,0)+1);
+        }
+
+    List<Map.Entry<Integer,Integer>> entries = new ArrayList<>(freq.entrySet());
+        entries.sort((a,b) -> b.getValue() - a.getValue());
+
+        int[] result=new int[k];
+    for(int i=0;i<k;i++){
+        result[i] = entries.get(i).getKey();
+    }
+   return result;
+    }    
+}
+
+
+
+// optimal approach
+// similar as the previous approach until frequency counting
+// after that add each entry from hashmap to minheap of size k
+// so we will always be maintaining the top k frequent elements
+// adding that to a array and returning it
+// m = HashMap storing unique elements
+//TC is O(n + m log k)
+//SC is O(m)
+class Solution {
+    public int[] topKFrequent(int[] nums, int k) {
+    Map<Integer, Integer> freq= new HashMap<>();
+        for(int num: nums){
+            freq.put(num,freq.getOrDefault(num,0)+1);
+        }
+
+    Queue<Map.Entry<Integer,Integer>> pq = new PriorityQueue<>(Comparator.comparingInt(Map.Entry::getValue));
+
+    for(Map.Entry<Integer, Integer> entry : freq.entrySet()){
+        if(pq.size()< k)
+            pq.offer(entry);
+        else{
+            if(pq.peek().getValue() < entry.getValue()){
+                pq.poll();
+                pq.offer(entry);
+            }
+        }
+    }
+    int[] result=new int[k];
+    int i=0;
+    while(!pq.isEmpty()){
+        result[i++] = pq.poll().getKey();
+    }
+   return result;
+    }    
+}
