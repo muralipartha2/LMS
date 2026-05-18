@@ -1,0 +1,29 @@
+//leetcode.com/problems/seat-reservation-manager/
+
+// this is a simple PriorityQueue to have a SeatReservation System
+// TC is O(n logn) during the insertion, otherwise reserve and unreserver works with O(log n)
+// SC is O(n)
+class SeatManager {
+    Queue<Integer> reservationQueue;
+    public SeatManager(int n) {
+        this.reservationQueue = new PriorityQueue<>();
+        for(int i=1;i<=n;i++)
+            reservationQueue.offer(i);
+        
+    }
+    
+    public int reserve() {
+        return reservationQueue.poll();
+    }
+    
+    public void unreserve(int seatNumber) {
+        reservationQueue.offer(seatNumber);
+    }
+}
+
+/**
+ * Your SeatManager object will be instantiated and called as such:
+ * SeatManager obj = new SeatManager(n);
+ * int param_1 = obj.reserve();
+ * obj.unreserve(seatNumber);
+ */
