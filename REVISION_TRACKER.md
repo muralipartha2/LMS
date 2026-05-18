@@ -259,6 +259,7 @@
 | 004 | Kthlargestelementinaarray | Miscellaneous | ⬜ | — |  |
 | 005 | Topkfrequentelements | Miscellaneous | ⬜ | — |  |
 | 006 | Kclosestpointstotheorigin | Miscellaneous | ⬜ | — |  |
+| 007 | Seatreservationmanager | Miscellaneous | ⬜ | — |  |
 
 ---
 
@@ -278,7 +279,7 @@
 | Matrix + Boundary Simulation | 1 | 0 | 1 |
 | Matrix + Transpose + Reverse | 1 | 0 | 1 |
 | Matrix Traversal | 1 | 0 | 1 |
-| Miscellaneous | 31 | 0 | 31 |
+| Miscellaneous | 32 | 0 | 32 |
 | Prefix + Suffix | 1 | 0 | 1 |
 | Prefix Sum | 5 | 0 | 5 |
 | Prefix Sum + HashMap | 1 | 0 | 1 |
@@ -290,7 +291,7 @@
 | Two Pointer | 10 | 0 | 10 |
 | Two Pointer + Greedy | 1 | 0 | 1 |
 | Variable Sliding Window | 7 | 0 | 7 |
-| **Total** | **94** | **0** | **94** |
+| **Total** | **95** | **0** | **95** |
 
 
 ---
