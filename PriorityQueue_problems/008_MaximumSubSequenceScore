@@ -1,0 +1,110 @@
+Sure. Clean and complete:
+
+---
+
+### Problem:
+Pick k same indices from both arrays.
+Maximize `sum(nums1[picked]) × min(nums2[picked])`
+
+---
+
+### Why same indices matter:
+nums1 and nums2 are linked by index. Picking different indices gives inflated wrong answer.
+
+---
+
+### Why pairs:
+Sorting nums2 alone breaks the index link. Pairs keep nums1 and nums2 correctly linked during sort.
+
+---
+
+### Derivation:
+
+**Point 1:**
+Every combination has exactly one minimum nums2 value.
+
+**Point 2:**
+For fixed minimum — maximize sum of nums1.
+
+**Point 3:**
+Sort pairs by nums2 descending → at position i, nums2[i] is guaranteed minimum of all selected so far.
+
+**Point 4:**
+At position i — eligible indices are 0 to i. Pick k largest nums1 from them → Min Heap of size k.
+
+**Point 5:**
+At each position where heap size == k → calculate score = sum × nums2[i] → track maximum.
+
+---
+
+### Algorithm:
+```
+1. Create pairs (nums1[i], nums2[i])
+2. Sort pairs by nums2 descending
+3. Iterate through pairs:
+   - add nums1 to heap and sum
+   - if size > k → remove minimum, subtract from sum
+   - if size == k → score = sum × nums2[i], update max
+4. Return maxScore
+```
+
+
+
+class Solution {
+    public long maxScore(int[] nums1, int[] nums2, int k) {
+        int n = nums1.length;
+        
+        // Step 1 — create pairs and sort by nums2 descending
+        int[][] pairs = new int[n][2];
+        for(int i = 0; i < n; i++) {
+            pairs[i][0] = nums1[i];
+            pairs[i][1] = nums2[i];
+        }
+        Arrays.sort(pairs, (a, b) -> b[1] - a[1]);
+        
+        // Step 2 — Min Heap for nums1 values
+        PriorityQueue<Integer> pq = new PriorityQueue<>();
+        long sum = 0;
+        long maxScore = 0;
+        
+        // Step 3 — iterate
+        for(int[] pair : pairs) {
+            pq.offer(pair[0]);  // add nums1 value
+            sum += pair[0];
+            
+            // maintain size k
+            if(pq.size() > k) {
+                sum -= pq.poll();  // remove smallest nums1
+            }
+            
+            // when heap has exactly k elements
+            if(pq.size() == k) {
+                maxScore = Math.max(maxScore, sum * pair[1]);
+            }
+        }
+        
+        return maxScore;
+    }
+}
+---
+
+### TC:
+```
+Create pairs     → O(n)
+Sort pairs       → O(n log n)
+Iterate n pairs:
+  heap offer     → O(log k)
+  heap poll      → O(log k)
+  n iterations   → O(n log k)
+Total            → O(n log n + n log k)
+                 = O(n log n)  since log n > log k
+```
+
+---
+
+### SC:
+```
+pairs array  → O(n)
+Min Heap     → O(k)
+Total        → O(n)
+```
