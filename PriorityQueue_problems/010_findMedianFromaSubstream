@@ -1,0 +1,116 @@
+
+
+//Naive and Simplest Solution
+// sort everytime before finding the median
+// TC is O(n logn)
+// SC is O(n)
+class MedianFinder {
+    List<Integer> list;
+    public MedianFinder() {
+        list = new ArrayList<>();
+    }
+    
+    public void addNum(int num) {
+        list.add(num);
+    }
+    
+    public double findMedian() {
+        Collections.sort(list);
+        int n = list.size();
+        if(n % 2 == 1){
+            return list.get(n/2);
+        } else {
+            return (list.get(n/2 -1) + list.get(n/2)) / 2.0;
+        }
+    }
+}
+
+
+
+// countArray Approach if the total number of values are just 101.
+// we can have a count array of size 101 created and incremented whenever we face 
+// such elements. since we know about the total take the first median
+// second median alos incase of even size. From now on we if run the countArray
+// runningSum would cross firstmedian index and second median index. so overall we
+// can identify the value.
+// addNum    → O(1)
+// findMedian → O(101) = O(1)
+// Space     → O(101) = O(1)
+class MedianFinder {
+    int[] count;
+    int total;
+
+    public MedianFinder() {
+        count = new int[101];  // range [0, 100]
+        total = 0;
+    }
+    
+    public void addNum(int num) {
+        count[num]++;
+        total++;
+    }
+    
+    public double findMedian() {
+        int target1 = total / 2;      // first middle (1-indexed)
+        int target2 = total / 2 + 1;  // second middle (1-indexed)
+        
+        int running = 0;
+        int first = -1, second = -1;
+        
+        for(int i = 0; i <= 100; i++) {
+            running += count[i];
+            
+            if(first == -1 && running >= target1) {
+                first = i;  // first middle value
+            }
+            if(second == -1 && running >= target2) {
+                second = i;  // second middle value
+                break;
+            }
+        }
+        
+        if(total % 2 == 1) {
+            return second;  // odd → just second middle
+        } else {
+            return (first + second) / 2.0;  // even → average
+        }
+    }
+}
+
+
+
+// Optimal Approach is using  two heaps
+// TC is O(logn) for adding O(1) to find median
+class MedianFinder {
+    Queue<Integer> minQ;
+    Queue<Integer> maxQ;
+    public MedianFinder() {
+        minQ = new PriorityQueue<>();
+        maxQ = new PriorityQueue<>(Comparator.reverseOrder());
+    }
+    
+    public void addNum(int num) {
+        if(maxQ.isEmpty() || num <= maxQ.peek()){
+            maxQ.offer(num);
+        } else {
+            minQ.offer(num);
+        }
+
+
+        if(maxQ.size() - minQ.size() > 1){
+            minQ.offer(maxQ.poll());
+        }else if(minQ.size() - maxQ.size() > 1){
+            maxQ.offer(minQ.poll());
+        }
+    }
+    
+    public double findMedian() {
+        if(maxQ.size() == minQ.size()){
+            return (maxQ.peek() + minQ.peek()) / 2.0;
+        } else if(maxQ.size() > minQ.size()) {
+            return maxQ.peek();
+        } else {
+            return minQ.peek();
+        }
+    }
+}
