@@ -263,6 +263,7 @@
 | 008 | Maximumsubsequencescore | Miscellaneous | ⬜ | — |  |
 | 009 | Taskscheduler | Miscellaneous | ⬜ | — |  |
 | 010 | Findmedianfromasubstream | Miscellaneous | ⬜ | — |  |
+| 011 | Ipo | Miscellaneous | ⬜ | — |  |
 
 ---
 
@@ -282,7 +283,7 @@
 | Matrix + Boundary Simulation | 1 | 0 | 1 |
 | Matrix + Transpose + Reverse | 1 | 0 | 1 |
 | Matrix Traversal | 1 | 0 | 1 |
-| Miscellaneous | 35 | 0 | 35 |
+| Miscellaneous | 36 | 0 | 36 |
 | Prefix + Suffix | 1 | 0 | 1 |
 | Prefix Sum | 5 | 0 | 5 |
 | Prefix Sum + HashMap | 1 | 0 | 1 |
@@ -294,7 +295,7 @@
 | Two Pointer | 10 | 0 | 10 |
 | Two Pointer + Greedy | 1 | 0 | 1 |
 | Variable Sliding Window | 7 | 0 | 7 |
-| **Total** | **98** | **0** | **98** |
+| **Total** | **99** | **0** | **99** |
 
 
 ---
