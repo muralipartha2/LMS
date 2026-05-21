@@ -1,0 +1,62 @@
+// LC 1383 — Maximum Performance of a Team
+// Problem: Given n engineers with speed[] and efficiency[], pick at most k engineers
+// Performance = sum(speeds of picked) × min(efficiency of picked)
+// Return maximum performance modulo 10^9 + 7
+
+// ─────────────────────────────────────────────
+// OPTIMAL — O(n log n) time, O(n) space
+//
+// WHY THIS APPROACH:
+// Performance = sumSpeed × minEfficiency
+// Two things to maximize — but they conflict (same indices must be used)
+// Key insight: fix the minimum efficiency, then maximize sum of speeds
+//
+// HOW:
+// Sort by efficiency descending → at position i, efficiency[i] is guaranteed minimum
+// No need to check all combinations — every position covers best case for that minimum
+// Min Heap of size k → always maintains k largest speeds seen so far
+// At each step → performance = sumSpeed × efficiency[i] → track maximum
+//
+// WHY MIN HEAP FOR SPEEDS:
+// We want k largest speeds → Min Heap of size k keeps smallest at top
+// When new speed comes in and size > k → remove smallest → only k largest remain
+// ─────────────────────────────────────────────
+class Solution {
+    public int maxPerformance(int n, int[] speed, int[] efficiency, int k) {
+
+        // pair [efficiency, speed] and sort by efficiency descending
+        int[][] engineers = new int[n][2];
+        for(int i = 0; i < n; i++) {
+            engineers[i][0] = efficiency[i];
+            engineers[i][1] = speed[i];
+        }
+        Arrays.sort(engineers, (a, b) -> b[0] - a[0]);
+
+        // min heap to maintain k largest speeds
+        PriorityQueue<Integer> minHeap = new PriorityQueue<>();
+        long sumSpeed = 0;
+        long maxPerformance = 0;
+        long MOD = (long)(1e9 + 7);
+
+        // iterate engineers sorted by efficiency descending
+        for(int[] engineer : engineers) {
+            int eff = engineer[0];
+            int spd = engineer[1];
+
+            // add current speed to heap and running sum
+            minHeap.offer(spd);
+            sumSpeed += spd;
+
+            // maintain at most k engineers — remove slowest if over limit
+            if(minHeap.size() > k) {
+                sumSpeed -= minHeap.poll();
+            }
+
+            // current efficiency is minimum — calculate and track max performance
+            maxPerformance = Math.max(maxPerformance, sumSpeed * eff);
+        }
+
+        // return result modulo 10^9 + 7
+        return (int)(maxPerformance % MOD);
+    }
+}
