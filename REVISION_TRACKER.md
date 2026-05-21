@@ -262,6 +262,7 @@
 | 007 | Seatreservationmanager | Miscellaneous | ⬜ | — |  |
 | 008 | Maximumsubsequencescore | Miscellaneous | ⬜ | — |  |
 | 009 | Taskscheduler | Miscellaneous | ⬜ | — |  |
+| 010 | Findmedianfromasubstream | Miscellaneous | ⬜ | — |  |
 
 ---
 
@@ -281,7 +282,7 @@
 | Matrix + Boundary Simulation | 1 | 0 | 1 |
 | Matrix + Transpose + Reverse | 1 | 0 | 1 |
 | Matrix Traversal | 1 | 0 | 1 |
-| Miscellaneous | 34 | 0 | 34 |
+| Miscellaneous | 35 | 0 | 35 |
 | Prefix + Suffix | 1 | 0 | 1 |
 | Prefix Sum | 5 | 0 | 5 |
 | Prefix Sum + HashMap | 1 | 0 | 1 |
@@ -293,7 +294,7 @@
 | Two Pointer | 10 | 0 | 10 |
 | Two Pointer + Greedy | 1 | 0 | 1 |
 | Variable Sliding Window | 7 | 0 | 7 |
-| **Total** | **97** | **0** | **97** |
+| **Total** | **98** | **0** | **98** |
 
 
 ---
