@@ -245,7 +245,7 @@
 | 005 | Numberofrecentcalls | Miscellaneous | ⬜ | — |  |
 | 006 | Stackimplementationusingqueue | Miscellaneous | ⬜ | — |  |
 | 007 | Circulardequeimplementationusingarray | Miscellaneous | ⬜ | — |  |
-| 008 | Designcircularqueue | Miscellaneous | ⬜ | — |  |
+| 008 | Designcirculardeque | Miscellaneous | ⬜ | — |  |
 
 ## PriorityQueue problems
 
