@@ -1,0 +1,80 @@
+// LC 502 — IPO
+// Problem: Given k projects, initial capital w, profits[] and capital[] arrays
+// Find maximum capital after completing at most k projects
+// At each step pick most profitable affordable project (capital[i] <= w)
+// Add profit to w and repeat
+
+// ─────────────────────────────────────────────
+// BRUTE FORCE — O(k*n) time, O(n) space
+// For each of k iterations scan entire array
+// Track max profit among affordable projects (capital[i] <= w)
+// Mark used projects with boolean array to avoid reuse
+// ─────────────────────────────────────────────
+class Solution {
+    public int findMaximizedCapital(int k, int w, int[] profits, int[] capital) {
+        int n = profits.length;
+        boolean[] usedProjects = new boolean[n];
+
+        // repeat for k projects
+        for(int i = 0; i < k; i++) {
+            int maxProfitSeen = -1;
+            int maxProfitIndex = -1;
+
+            // scan all projects to find max profit affordable project
+            for(int j = 0; j < n; j++) {
+                if(!usedProjects[j] && capital[j] <= w) {
+                    if(profits[j] > maxProfitSeen) {
+                        maxProfitSeen = profits[j];
+                        maxProfitIndex = j;
+                    }
+                }
+            }
+
+            // no affordable project found — stop early
+            if(maxProfitIndex == -1) break;
+
+            // add profit to capital and mark project as used
+            w += maxProfitSeen;
+            usedProjects[maxProfitIndex] = true;
+        }
+        return w;
+    }
+}
+
+// ─────────────────────────────────────────────
+// OPTIMAL — O(n log n) time, O(n) space
+// Store [capital, profit] pairs in Min Heap ordered by capital
+// For each of k iterations move all affordable projects to Max Heap
+// Max Heap ordered by profit — always gives highest profit at top
+// Poll max profit, add to w, repeat k times
+// ─────────────────────────────────────────────
+class Solution {
+    public int findMaximizedCapital(int k, int w, int[] profits, int[] capital) {
+        int n = profits.length;
+
+        // store [capital, profit] pairs — min heap by capital
+        PriorityQueue<int[]> minHeap = new PriorityQueue<>((a,b) -> a[0] - b[0]);
+        for(int i = 0; i < n; i++) {
+            minHeap.offer(new int[]{capital[i], profits[i]});
+        }
+
+        // max heap by profit — holds all affordable projects
+        PriorityQueue<Integer> maxHeap = new PriorityQueue<>(Comparator.reverseOrder());
+
+        // repeat for k projects
+        for(int i = 0; i < k; i++) {
+
+            // move all affordable projects to max heap
+            while(!minHeap.isEmpty() && minHeap.peek()[0] <= w) {
+                maxHeap.offer(minHeap.poll()[1]);
+            }
+
+            // no affordable project found — stop early
+            if(maxHeap.isEmpty()) break;
+
+            // pick highest profit project and add to capital
+            w += maxHeap.poll();
+        }
+        return w;
+    }
+}
