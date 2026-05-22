@@ -1,0 +1,100 @@
+---
+
+# Binary Search — Concept, Template & Nuances
+
+## Prerequisites
+- Array must be **sorted**
+- Works on any data where you can determine: *"is my answer to the left or right of mid?"*
+
+---
+
+## Why Binary Search?
+
+| n | Linear Search | Binary Search |
+|---|---|---|
+| 100 | 100 steps | 7 steps |
+| 1,000,000 | 1,000,000 steps | 20 steps |
+| 1,000,000,000 | 1 billion steps | 30 steps |
+
+**Time: O(log n) | Space: O(1)**
+
+---
+
+## Core Template
+
+```java
+int lo = 0, hi = nums.length - 1;
+
+while (lo <= hi) {
+    int mid = lo + (hi - lo) / 2;
+
+    if (nums[mid] == target)       return mid;
+    else if (nums[mid] < target)   lo = mid + 1;
+    else                           hi = mid - 1;
+}
+return -1;
+```
+
+**Why `lo + (hi - lo) / 2`?** Same mid value — but prevents int overflow.
+**Why `lo <= hi`?** Handles single element arrays correctly.
+**Loop exits when?** `lo > hi` — search space exhausted → return -1.
+
+---
+
+## Nuance 1 — Boundary (First / Last Occurrence)
+
+```java
+// First occurrence — on match, keep searching LEFT
+if (nums[mid] == target) { result = mid; hi = mid - 1; }
+
+// Last occurrence — on match, keep searching RIGHT
+if (nums[mid] == target) { result = mid; lo = mid + 1; }
+
+// Both first + last → two separate passes — O(log n) each
+```
+> Found target but don't stop — keep shrinking towards the boundary you want.
+
+---
+
+## Nuance 2 — Rotated Array (One Half Always Sorted)
+
+```java
+if (nums[lo] <= nums[mid]) {
+    // LEFT half sorted
+    if (nums[lo] <= target && target < nums[mid]) hi = mid - 1;
+    else                                          lo = mid + 1;
+} else {
+    // RIGHT half sorted
+    if (nums[mid] < target && target <= nums[hi]) lo = mid + 1;
+    else                                          hi = mid - 1;
+}
+```
+
+> Use the sorted half to rule out where target isn't — other half is where it must be.
+
+---
+
+## Nuance 3 — Answer Space
+
+```java
+int lo = minPossibleAnswer, hi = maxPossibleAnswer, result = -1;
+
+while (lo <= hi) {
+    int mid = lo + (hi - lo) / 2;
+    if (condition(mid)) { result = mid; hi = mid - 1; } // minimizing
+    else                { lo = mid + 1; }
+}
+return result;
+```
+> lo/hi are answer boundaries, not indices. Test if mid is a valid answer, shrink the range.
+
+---
+
+## Pattern Summary
+
+| Pattern | Key change from classic |
+|---|---|
+| Classic | None — base template |
+| Boundary | On match: record + keep shrinking |
+| Rotated Array | Identify sorted half, use it to eliminate |
+| Answer Space | lo/hi are answer range, not indices |
