@@ -1,0 +1,53 @@
+// LC 1346 — Check If N and Its Double Exist
+// Problem: Check if any two indices i != j exist such that nums[i] == 2 * nums[j]
+// Key insight: For each element, check if its double or half already seen — HashSet gives O(1) lookup
+//
+// ─────────────────────────────────────────────────────────────────
+// BRUTE FORCE — O(n²) time, O(1) space
+// WHY: Check every pair (i, j) where i != j for the double condition
+// HOW: Two nested loops — outer picks i, inner scans all j, skip when i == j
+// ─────────────────────────────────────────────────────────────────
+class Solution {
+    public boolean checkIfExist(int[] arr) {
+
+        // check every pair
+        for (int i = 0; i < arr.length; i++) {
+            for (int j = 0; j < arr.length; j++) {
+
+                // skip same index, check double condition
+                if ((i != j) && (arr[i] == 2 * arr[j]))
+                    return true;
+            }
+        }
+
+        return false;
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// OPTIMAL — O(n) time, O(n) space
+// WHY: HashSet gives O(1) lookup — no need to scan whole array per element
+// HOW: Build set incrementally — for each element check both directions
+//      (is double in set? is half in set?) before adding current element.
+//      Adding AFTER checking handles the zero duplicate edge case correctly.
+// ─────────────────────────────────────────────────────────────────
+class Solution {
+    public boolean checkIfExist(int[] arr) {
+
+        Set<Integer> seen = new HashSet<>();
+
+        for (int num : arr) {
+
+            // check if double exists in seen elements
+            if (seen.contains(num * 2)) return true;
+
+            // check if half exists — only valid if num is even (avoid int division false match)
+            if (num % 2 == 0 && seen.contains(num / 2)) return true;
+
+            // add current element AFTER checking — handles [0,0] correctly
+            seen.add(num);
+        }
+
+        return false;
+    }
+}
