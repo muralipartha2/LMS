@@ -1,0 +1,55 @@
+// LC 1295 — Find Numbers with Even Number of Digits
+// Problem: Count integers in array that have an even number of digits
+// Key insight: Linear scan each element, count its digits, check if even
+//
+// ─────────────────────────────────────────────────────────────────
+// APPROACH 1 — String conversion  |  O(n) time, O(1) space
+// WHY: String.valueOf gives digit count in one call — clean and readable
+// HOW: Convert number to string, take length, check if length % 2 == 0
+// ─────────────────────────────────────────────────────────────────
+class Solution {
+    public int findNumbers(int[] nums) {
+
+        int evenCount = 0;
+
+        // scan every element — linear search
+        for (int i = 0; i < nums.length; i++) {
+            // digit count = length of string representation
+            int digits = String.valueOf(nums[i]).length();
+
+            // even digit count → increment result
+            if (digits % 2 == 0) evenCount++;
+        }
+
+        return evenCount;
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// APPROACH 2 — Division by 10  |  O(n) time, O(1) space
+// WHY: Fundamental approach — strips digits one by one
+// HOW: Divide by 10 until 0, count iterations = digit count
+// ─────────────────────────────────────────────────────────────────
+class Solution {
+    public int findNumbers(int[] nums) {
+
+        int evenCount = 0;
+
+        // scan every element — linear search
+        for (int num : nums) {
+
+            // count digits by repeatedly dividing by 10
+            int digits = 0;
+            int n = num;
+            while (n > 0) {
+                n /= 10;
+                digits++;
+            }
+
+            // even digit count → increment result
+            if (digits % 2 == 0) evenCount++;
+        }
+
+        return evenCount;
+    }
+}
