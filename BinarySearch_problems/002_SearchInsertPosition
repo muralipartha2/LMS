@@ -1,0 +1,33 @@
+// LC 35 — Search Insert Position
+// Problem: Return index of target in sorted array, or index where it would be inserted
+// Key insight: When loop exits, lo always points to the correct insert position
+//
+// ─────────────────────────────────────────────────────────────────
+// OPTIMAL — O(log n) time, O(1) space
+// WHY: Sorted array — binary search finds position in O(log n)
+// HOW: Classic template — only difference from LC 704 is return lo instead of -1
+// ─────────────────────────────────────────────────────────────────
+class Solution {
+    public int searchInsert(int[] nums, int target) {
+
+        // initialize search boundaries
+        int lo = 0, hi = nums.length - 1;
+
+        while (lo <= hi) {
+            // safe mid — avoids int overflow
+            int mid = lo + (hi - lo) / 2;
+
+            if (nums[mid] == target) {
+                return mid;              // found — return index
+            } else if (target < nums[mid]) {
+                hi = mid - 1;            // target in left half
+            } else {
+                lo = mid + 1;            // target in right half
+            }
+        }
+
+        // loop exits when lo > hi
+        // lo points to exact insert position to maintain sorted order
+        return lo;
+    }
+}
