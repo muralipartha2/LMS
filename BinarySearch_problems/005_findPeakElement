@@ -1,0 +1,58 @@
+// LC 162 — Find Peak Element
+// Problem: Return index of any peak element (strictly greater than its neighbors)
+// Key insight: If nums[mid] < nums[mid+1], a peak must exist in right half due to -∞ boundary.
+//              If nums[mid] > nums[mid+1], mid itself could be peak — keep it in search space.
+//
+// ─────────────────────────────────────────────────────────────────
+// BRUTE FORCE — O(n) time, O(1) space
+// WHY: Linear scan checking each element against both neighbors
+// HOW: Handle edge cases (first/last element) separately
+//      Middle elements must be greater than both neighbors
+// ─────────────────────────────────────────────────────────────────
+class Solution {
+    public int findPeakElement(int[] nums) {
+
+        // single element — always a peak
+        if (nums.length == 1) return 0;
+
+        // check first element — only right neighbor matters
+        if (nums[0] > nums[1]) return 0;
+
+        // check middle elements against both neighbors
+        for (int i = 1; i < nums.length - 1; i++) {
+            if (nums[i] > nums[i-1] && nums[i] > nums[i+1])
+                return i;
+        }
+
+        // last element — only left neighbor matters
+        return nums.length - 1;
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// OPTIMAL — O(log n) time, O(1) space
+// WHY: Array has -∞ boundaries — a peak is guaranteed in the uphill direction
+// HOW: nums[mid] < nums[mid+1] → going uphill → peak in right → lo = mid + 1
+//      nums[mid] > nums[mid+1] → mid could be peak → hi = mid (not mid-1)
+//      Loop condition lo < hi (not lo <= hi) — exit when lo == hi, that is the peak
+// ─────────────────────────────────────────────────────────────────
+class Solution {
+    public int findPeakElement(int[] nums) {
+
+        int lo = 0, hi = nums.length - 1;
+
+        // lo < hi — exit when lo == hi, that element is the peak
+        while (lo < hi) {
+            int mid = lo + (hi - lo) / 2;
+
+            if (nums[mid] < nums[mid+1]) {
+                lo = mid + 1;   // going uphill right — peak in right half
+            } else {
+                hi = mid;       // mid could be peak — keep it in search space
+            }
+        }
+
+        // lo == hi — converged to peak
+        return lo;
+    }
+}
