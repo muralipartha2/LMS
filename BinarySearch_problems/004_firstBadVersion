@@ -1,0 +1,48 @@
+// LC 278 — First Bad Version
+// Problem: Find first bad version from [1..n] minimizing isBadVersion() API calls
+// Key insight: First occurrence pattern — on bad version record and keep searching left
+//
+// ─────────────────────────────────────────────────────────────────
+// BRUTE FORCE — O(n) time, O(1) space
+// WHY: Linear scan from version 1 until first bad version found
+// HOW: Call isBadVersion() for every version sequentially
+// ─────────────────────────────────────────────────────────────────
+public class Solution extends VersionControl {
+    public int firstBadVersion(int n) {
+
+        // scan every version from start
+        for (int i = 1; i <= n; i++) {
+            if (isBadVersion(i)) return i;  // first bad found
+        }
+        return n;
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// OPTIMAL — O(log n) time, O(1) space
+// WHY: Versions are ordered [G,G,G,B,B,B] — binary search on first occurrence
+// HOW: isBadVersion(mid) replaces target check
+//      Bad version  → record mid, keep searching left  (hi = mid - 1)
+//      Good version → search right                     (lo = mid + 1)
+// NOTE: lo=1 not 0 (versions start at 1)
+//       n can be Integer.MAX_VALUE — must use lo+(hi-lo)/2 to avoid overflow
+// ─────────────────────────────────────────────────────────────────
+public class Solution extends VersionControl {
+    public int firstBadVersion(int n) {
+
+        int lo = 1, hi = n, result = 0;
+
+        while (lo <= hi) {
+            // safe mid — n can be Integer.MAX_VALUE, lo+hi overflows
+            int mid = lo + (hi - lo) / 2;
+
+            if (isBadVersion(mid)) {
+                result = mid;      // record — but keep searching left
+                hi = mid - 1;
+            } else {
+                lo = mid + 1;      // good version — search right
+            }
+        }
+        return result;
+    }
+}
