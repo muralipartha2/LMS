@@ -1,0 +1,60 @@
+// LC 33 — Search in Rotated Sorted Array
+// Problem: Search target in rotated sorted array with distinct elements
+// Key insight: One half is always sorted. Check if target lies in sorted half,
+//              search there — otherwise search the other half.
+//
+// ─────────────────────────────────────────────────────────────────
+// BRUTE FORCE — O(n) time, O(1) space
+// WHY: Linear scan — no exploitation of sorted property
+// HOW: Check every element until target found
+// ─────────────────────────────────────────────────────────────────
+class Solution {
+    public int search(int[] nums, int target) {
+
+        // scan every element
+        for (int i = 0; i < nums.length; i++) {
+            if (nums[i] == target) return i;
+        }
+        return -1;
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// OPTIMAL — O(log n) time, O(1) space
+// WHY: One half always sorted — use range check to decide which half to search
+// HOW: Step 1 — identify sorted half: nums[lo] <= nums[mid] → left sorted, else right sorted
+//      Step 2 — check if target in sorted half's range → search there
+//      Step 3 — otherwise search the other half
+// NOTE: lo <= hi (searching for target, not minimum)
+//       Compare nums[lo] vs nums[mid] to identify sorted half (not nums[hi])
+// ─────────────────────────────────────────────────────────────────
+class Solution {
+    public int search(int[] nums, int target) {
+
+        int lo = 0, hi = nums.length - 1;
+
+        while (lo <= hi) {
+            int mid = lo + (hi - lo) / 2;
+
+            if (nums[mid] == target) return mid;
+
+            if (nums[lo] <= nums[mid]) {
+                // left half is sorted
+                if (nums[lo] <= target && target < nums[mid]) {
+                    hi = mid - 1;   // target in left half
+                } else {
+                    lo = mid + 1;   // target in right half
+                }
+            } else {
+                // right half is sorted
+                if (nums[mid] < target && target <= nums[hi]) {
+                    lo = mid + 1;   // target in right half
+                } else {
+                    hi = mid - 1;   // target in left half
+                }
+            }
+        }
+
+        return -1;  // target not found
+    }
+}
