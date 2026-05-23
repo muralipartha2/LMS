@@ -1,0 +1,53 @@
+// LC 153 — Find Minimum in Rotated Sorted Array
+// Problem: Find minimum element in a rotated sorted array with distinct elements
+// Key insight: One half is always sorted. If nums[mid] > nums[hi], rotation is in
+//              right half — minimum is there. Otherwise minimum is in left half.
+//
+// ─────────────────────────────────────────────────────────────────
+// BRUTE FORCE — O(n) time, O(1) space
+// WHY: Linear scan — check every element for the minimum
+// HOW: Track minimum as we scan, return at end
+// ─────────────────────────────────────────────────────────────────
+class Solution {
+    public int findMin(int[] nums) {
+
+        int min = nums[0];
+
+        // scan every element and track minimum
+        for (int num : nums) {
+            min = Math.min(min, num);
+        }
+
+        return min;
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// OPTIMAL — O(log n) time, O(1) space
+// WHY: One half is always sorted — use it to eliminate the other half
+// HOW: Compare nums[mid] with nums[hi]:
+//      nums[mid] > nums[hi] → rotation in right half → minimum in right → lo = mid+1
+//      nums[mid] < nums[hi] → right half sorted → minimum in left half  → hi = mid
+//      Loop: lo < hi (not <=) — exit when lo==hi, that is the minimum
+// NOTE: Compare with nums[hi] not nums[lo] — avoids edge case when lo==mid (2 element array)
+// ─────────────────────────────────────────────────────────────────
+class Solution {
+    public int findMin(int[] nums) {
+
+        int lo = 0, hi = nums.length - 1;
+
+        // lo < hi — converges to minimum element
+        while (lo < hi) {
+            int mid = lo + (hi - lo) / 2;
+
+            if (nums[mid] > nums[hi]) {
+                lo = mid + 1;   // rotation in right half — minimum is there
+            } else {
+                hi = mid;       // right half sorted — minimum in left half, mid included
+            }
+        }
+
+        // lo == hi — converged to minimum
+        return nums[lo];
+    }
+}
