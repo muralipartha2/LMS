@@ -1,0 +1,76 @@
+// LC 34 — Find First and Last Position of Element in Sorted Array
+// Problem: Return [first, last] index of target in sorted array with duplicates
+// Key insight: Two binary searches — one shrinks left for first, one shrinks right for last
+//
+// ─────────────────────────────────────────────────────────────────
+// BRUTE FORCE — O(n) time, O(1) space
+// WHY: Linear scan from left for first, from right for last
+// HOW: Two passes through array — no binary search used
+// ─────────────────────────────────────────────────────────────────
+class Solution {
+    public int[] searchRange(int[] nums, int target) {
+
+        int[] result = {-1, -1};
+
+        // first occurrence — scan left to right
+        for (int i = 0; i < nums.length; i++) {
+            if (nums[i] == target) { result[0] = i; break; }
+        }
+
+        // last occurrence — scan right to left
+        for (int i = nums.length - 1; i >= 0; i--) {
+            if (nums[i] == target) { result[1] = i; break; }
+        }
+
+        return result;
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// OPTIMAL — O(log n) time, O(1) space
+// WHY: Sorted array — binary search with boundary trick
+// HOW: Shared helper with findFirst flag
+//      First occurrence → on match keep going LEFT  (hi = mid - 1)
+//      Last occurrence  → on match keep going RIGHT (lo = mid + 1)
+//      Optimization: use firstOccurrence as lo for last search
+//      Last occurrence can never be left of first occurrence
+// ─────────────────────────────────────────────────────────────────
+class Solution {
+    public int[] searchRange(int[] nums, int target) {
+
+        int[] result = {-1, -1};
+
+        if (nums.length == 0) return result;
+
+        // find first occurrence across full array
+        int first = binarySearch(nums, target, 0, nums.length - 1, true);
+        result[0] = first;
+
+        // if not found, last occurrence won't exist either
+        if (first == -1) return result;
+
+        // find last occurrence — start from first, never to its left
+        result[1] = binarySearch(nums, target, first, nums.length - 1, false);
+
+        return result;
+    }
+
+    private int binarySearch(int[] nums, int target, int lo, int hi, boolean findFirst) {
+        int result = -1;
+
+        while (lo <= hi) {
+            int mid = lo + (hi - lo) / 2;
+
+            if (nums[mid] == target) {
+                result = mid;
+                if (findFirst) hi = mid - 1;  // keep searching left
+                else           lo = mid + 1;  // keep searching right
+            } else if (target < nums[mid]) {
+                hi = mid - 1;
+            } else {
+                lo = mid + 1;
+            }
+        }
+        return result;
+    }
+}
