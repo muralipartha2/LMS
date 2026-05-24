@@ -1,0 +1,97 @@
+// LC 875 — Koko Eating Bananas
+// Problem: Find minimum eating speed k so Koko finishes all piles within h hours
+// Key insight: Answer space BS — search speed range [1..max(piles)]
+//              For each candidate speed, check if total hours <= h
+//
+// ─────────────────────────────────────────────────────────────────
+// BRUTE FORCE — O(max(piles) × n) time, O(1) space
+// WHY: Try every speed from 1 upward — first valid speed is minimum
+// HOW: For each speed, sum ceiling(pile/speed) for all piles
+//      Return first speed where total hours <= h
+// ─────────────────────────────────────────────────────────────────
+class Solution {
+    public int minEatingSpeed(int[] piles, int h) {
+
+        // find max pile for upper bound
+        int maxPile = 0;
+        for (int pile : piles) maxPile = Math.max(pile, maxPile);
+
+        // try every speed from 1 to maxPile
+        for (int speed = 1; speed <= maxPile; speed++) {
+            long totalHours = 0;
+            for (int pile : piles) {
+                totalHours += (pile + speed - 1) / speed;
+            }
+            if (totalHours <= h) return speed;  // first valid = minimum
+        }
+
+        return maxPile;
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// OPTIMAL — O(n log(max(piles))) time, O(1) space
+// WHY: Speed range [1..max(piles)] is sorted — binary search on answer space
+//
+// ANSWER SPACE SETUP:
+//   lo = 1           → minimum speed (eat 1 banana/hour — slowest possible)
+//   hi = max(piles)  → maximum speed (finish biggest pile in 1 hour)
+//                      no point going faster — extra speed is wasted
+//   piles are NOT sorted — cannot use piles[last] as max directly
+//   must iterate through all piles to find true maximum
+//
+// CONDITION CHECK — can Koko finish at speed mid?
+//   Each pile takes ceil(pile/speed) hours because:
+//   - Koko eats at most `speed` bananas per hour from one pile
+//   - If pile has remainder after dividing by speed, she needs one extra hour
+//   - Example: pile=7, speed=4 → 7/4=1.75 → needs 2 hours (can't do half hours)
+//   - ceil(a/b) = (a + b - 1) / b  — standard ceiling division without Math.ceil
+//   - Why (a+b-1)/b works:
+//       exact division   → remainder=0 → adding b-1 doesn't push to next integer
+//       has remainder    → adding b-1 guarantees push to next integer
+//   - Example: (7+4-1)/4 = 10/4 = 2 ✓
+//              (8+4-1)/4 = 11/4 = 2 ✓ (exact — unchanged)
+//              (9+4-1)/4 = 12/4 = 3 ✓
+//
+// DIRECTION — minimizing speed:
+//   totalHours <= h → valid speed, try smaller → hi = mid-1
+//   totalHours > h  → too slow, need faster   → lo = mid+1
+//
+// OVERFLOW WARNING:
+//   totalHoursTaken must be long — not int
+//   At speed=1, each pile takes pile-value hours
+//   For large piles (up to 10^9) with many piles → sum easily exceeds Integer.MAX_VALUE
+//   Example: 3 piles of 805306368 at speed=1 → total = 2,415,919,104 > 2,147,483,647
+//   Declaring as int gives garbage value → wrong comparison → wrong answer
+// ─────────────────────────────────────────────────────────────────
+class Solution {
+    public int minEatingSpeed(int[] piles, int h) {
+
+        // find max pile — upper bound of speed range
+        // piles not sorted — must iterate, cannot use piles[last]
+        int lo = 1, hi = 0;
+        for (int pile : piles) hi = Math.max(pile, hi);
+
+        int result = hi;  // worst case — eat at max speed
+
+        while (lo <= hi) {
+            int mid = lo + (hi - lo) / 2;
+
+            // check if speed mid finishes all piles within h hours
+            // ceil(pile/mid) = (pile + mid - 1) / mid — hours needed per pile
+            long totalHours = 0;
+            for (int pile : piles) {
+                totalHours += (pile + mid - 1) / mid;
+            }
+
+            if (totalHours <= h) {
+                result = mid;        // valid speed — record, try smaller
+                hi = mid - 1;        // minimizing — go left
+            } else {
+                lo = mid + 1;        // too slow — go right
+            }
+        }
+
+        return result;
+    }
+}
