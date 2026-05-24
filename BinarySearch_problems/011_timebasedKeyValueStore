@@ -1,0 +1,100 @@
+// LC 981 — Time Based Key-Value Store
+// Problem: Design a data structure that stores key-value pairs with timestamps
+//          and retrieves value at largest timestamp <= given timestamp
+// Key insight: Timestamps always inserted in increasing order → list is naturally sorted
+//              get() = find last occurrence <= target → Nuance 1 binary search
+//
+// ─────────────────────────────────────────────────────────────────
+// BRUTE FORCE — O(n) per get, O(1) per set, O(n) space
+// WHY: Linear scan from right to left — first timestamp <= given is the answer
+// HOW: Iterate timestamps list backwards, return first match
+// ─────────────────────────────────────────────────────────────────
+class TimeMap {
+
+    Map<String, List<Integer>> timestamps;
+    Map<String, List<String>> values;
+
+    public TimeMap() {
+        timestamps = new HashMap<>();
+        values = new HashMap<>();
+    }
+
+    public void set(String key, String value, int timestamp) {
+        timestamps.putIfAbsent(key, new ArrayList<>());
+        values.putIfAbsent(key, new ArrayList<>());
+
+        timestamps.get(key).add(timestamp);
+        values.get(key).add(value);
+    }
+
+    public String get(String key, int timestamp) {
+        if (!timestamps.containsKey(key)) return "";
+
+        List<Integer> times = timestamps.get(key);
+        List<String> vals = values.get(key);
+
+        // scan from right — first timestamp <= given is the answer
+        for (int i = times.size() - 1; i >= 0; i--) {
+            if (times.get(i) <= timestamp) return vals.get(i);
+        }
+
+        return "";  // no timestamp <= given timestamp
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// OPTIMAL — O(log n) per get, O(1) per set, O(n) space
+// WHY: Timestamps always increasing → list naturally sorted → binary search
+// HOW: Two HashMaps — one for timestamps (List<Integer>), one for values (List<String>)
+//      set() → putIfAbsent to initialize, add timestamp and value to respective lists
+//      get() → binary search on timestamps list for largest timestamp <= given
+//              result index used to fetch corresponding value
+// NOTE: ArrayList chosen over LinkedList — binary search needs O(1) random access
+//       LinkedList.get(i) is O(n) — kills binary search performance
+//       Single HashMap possible with TreeMap.floorKey() — covered in Collections session
+// ─────────────────────────────────────────────────────────────────
+class TimeMap {
+
+    Map<String, List<Integer>> timestamps;
+    Map<String, List<String>> values;
+
+    public TimeMap() {
+        timestamps = new HashMap<>();
+        values = new HashMap<>();
+    }
+
+    public void set(String key, String value, int timestamp) {
+        // initialize lists if key is new
+        timestamps.putIfAbsent(key, new ArrayList<>());
+        values.putIfAbsent(key, new ArrayList<>());
+
+        // timestamps always increasing — list stays naturally sorted
+        timestamps.get(key).add(timestamp);
+        values.get(key).add(value);
+    }
+
+    public String get(String key, int timestamp) {
+        // key not found
+        if (!timestamps.containsKey(key)) return "";
+
+        List<Integer> times = timestamps.get(key);
+        List<String> vals = values.get(key);
+
+        // binary search — largest timestamp <= given timestamp
+        int lo = 0, hi = times.size() - 1, result = -1;
+
+        while (lo <= hi) {
+            int mid = lo + (hi - lo) / 2;
+
+            if (times.get(mid) <= timestamp) {
+                result = mid;        // valid — record, try larger timestamp
+                lo = mid + 1;        // last occurrence — go right
+            } else {
+                hi = mid - 1;        // too large — go left
+            }
+        }
+
+        // result == -1 means no timestamp <= given timestamp exists
+        return result == -1 ? "" : vals.get(result);
+    }
+}
