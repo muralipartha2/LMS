@@ -1,0 +1,61 @@
+// LC 74 — Search a 2D Matrix
+// Problem: Search target in m×n matrix where each row is sorted and
+//          first element of each row > last element of previous row
+// Key insight: Matrix is effectively a sorted 1D array — map mid index
+//              to row/col using mid/n and mid%n. Apply classic binary search.
+//
+// ─────────────────────────────────────────────────────────────────
+// BRUTE FORCE — O(m×n) time, O(1) space
+// WHY: Linear scan every element row by row
+// HOW: Two nested loops — outer for rows, inner for columns
+// ─────────────────────────────────────────────────────────────────
+class Solution {
+    public boolean searchMatrix(int[][] matrix, int target) {
+
+        // scan every element row by row
+        for (int i = 0; i < matrix.length; i++) {
+            for (int j = 0; j < matrix[0].length; j++) {
+                if (matrix[i][j] == target) return true;
+            }
+        }
+        return false;
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// OPTIMAL — O(log(m×n)) time, O(1) space
+// WHY: Matrix is a sorted 1D array in disguise — binary search directly
+// HOW: Treat matrix as flattened sorted array of size m×n
+//      Map mid index → row = mid/n, col = mid%n
+//      mid/n → how many complete rows fit before mid (integer division)
+//      mid%n → remaining position within that row (remainder)
+//      Apply classic binary search using matrix[row][col]
+// ─────────────────────────────────────────────────────────────────
+class Solution {
+    public boolean searchMatrix(int[][] matrix, int target) {
+
+        int m = matrix.length;
+        int n = matrix[0].length;
+
+        // treat as flattened sorted array of size m*n
+        int lo = 0, hi = m * n - 1;
+
+        while (lo <= hi) {
+            int mid = lo + (hi - lo) / 2;
+
+            // map 1D index to 2D coordinates
+            int row = mid / n;
+            int col = mid % n;
+
+            if (matrix[row][col] == target) {
+                return true;
+            } else if (target > matrix[row][col]) {
+                lo = mid + 1;            // target in right half
+            } else {
+                hi = mid - 1;            // target in left half
+            }
+        }
+
+        return false;
+    }
+}
