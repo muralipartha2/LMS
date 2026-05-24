@@ -1,0 +1,51 @@
+// LC 69 — Sqrt(x)
+// Problem: Return floor of square root of x without using built-in sqrt functions
+// Key insight: Answer space BS — search range [0..x] for largest k where k*k <= x
+//
+// ─────────────────────────────────────────────────────────────────
+// BRUTE FORCE — O(√x) time, O(1) space
+// WHY: Iterate from 1 upward, track last valid k where k*k <= x
+// HOW: Loop until k*k > x, return last valid k
+// ─────────────────────────────────────────────────────────────────
+class Solution {
+    public int mySqrt(int x) {
+
+        int result = 0;
+
+        // iterate from 1 until k*k exceeds x
+        for (int k = 1; (long) k * k <= x; k++) {
+            result = k;              // keep overriding — last valid k is the answer
+        }
+
+        return result;
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// OPTIMAL — O(log x) time, O(1) space
+// WHY: Answer space BS — largest k satisfying k*k <= x
+// HOW: lo/hi are answer boundaries [0..x], not array indices
+//      mid*mid <= x → valid answer, record, try larger → lo = mid+1
+//      mid*mid > x  → too large → hi = mid-1
+// NOTE: Cast to (long) before multiplying — mid*mid overflows int
+//       when x is near Integer.MAX_VALUE
+// ─────────────────────────────────────────────────────────────────
+class Solution {
+    public int mySqrt(int x) {
+
+        int lo = 0, hi = x, result = -1;
+
+        while (lo <= hi) {
+            int mid = lo + (hi - lo) / 2;
+
+            if ((long) mid * mid <= x) {
+                result = mid;        // valid — record, try larger
+                lo = mid + 1;        // maximizing — go right
+            } else {
+                hi = mid - 1;        // too large — go left
+            }
+        }
+
+        return result;
+    }
+}
