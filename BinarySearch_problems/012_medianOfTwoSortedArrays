@@ -1,0 +1,162 @@
+// LC 4 — Median of Two Sorted Arrays
+// Problem: Find median of two sorted arrays in O(log(m+n)) time
+// Key insight: Binary search on partition of smaller array
+//              Find i elements from nums1 and j elements from nums2
+//              such that left half <= right half across both arrays
+//
+// ─────────────────────────────────────────────────────────────────
+// BRUTE FORCE — O(m+n) time, O(m+n) space
+// WHY: Merge both arrays then find median directly
+// HOW: Two pointer merge — pick smaller element each step
+//      Find median from merged array based on odd/even total length
+// ─────────────────────────────────────────────────────────────────
+class Solution {
+    public double findMedianSortedArrays(int[] nums1, int[] nums2) {
+
+        int m = nums1.length, n = nums2.length;
+        int[] merged = new int[m + n];
+        int i = 0, j = 0, k = 0;
+
+        // merge both sorted arrays — two pointer approach
+        while (i < m && j < n) {
+            merged[k++] = nums1[i] < nums2[j] ? nums1[i++] : nums2[j++];
+        }
+        while (i < m) merged[k++] = nums1[i++];
+        while (j < n) merged[k++] = nums2[j++];
+
+        // find median from merged array
+        int total = m + n;
+        if (total % 2 == 1) return merged[total / 2];
+        return (merged[total / 2 - 1] + merged[total / 2]) / 2.0;
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// OPTIMAL — O(log(min(m,n))) time, O(1) space
+//
+// WHY NOT BRUTE FORCE:
+//   Merging is O(m+n) — constraint requires O(log(m+n))
+//   Cannot combine arrays — combining itself costs O(m+n)
+//
+// WHY NOT AVERAGE OF INDIVIDUAL MEDIANS:
+//   Finding median of each array separately and averaging is WRONG
+//   Example: nums1=[1,6], nums2=[2,3]
+//   median(nums1)=3.5, median(nums2)=2.5, average=3.0
+//   But combined=[1,2,3,6] → actual median=2.5 ✗
+//   Median depends on relative ordering of ALL elements together
+//
+// CORE IDEA — PARTITION BOTH ARRAYS:
+//   Median splits combined array into two equal halves
+//   Instead of merging — find correct partition in BOTH arrays simultaneously
+//   i elements from nums1 + j elements from nums2 = left half
+//   Everything in left half <= everything in right half
+//
+//   Example:
+//   nums1 = [1, 3, 5]
+//   nums2 = [2, 4, 6]
+//   total = 6, left half needs = 3 elements
+//
+//   Try i=2 from nums1, j=1 from nums2:
+//   nums1: [1, 3 | 5]
+//   nums2: [2    | 4, 6]
+//   left  = [1, 3, 2] → max = 3
+//   right = [5, 4, 6] → min = 4
+//   3 <= 4 ✓ valid! median = (3+4)/2 = 3.5
+//
+// BINARY SEARCH SETUP:
+//   Always binary search on SMALLER array (nums1)
+//   Why? j = (m+n+1)/2 - i must stay >= 0
+//        If we search on larger array, j could go negative
+//   Swap arrays if nums1.length > nums2.length
+//
+//   lo = 0  (take 0 elements from nums1)
+//   hi = m  (take all elements from nums1)
+//   NOT hi = m+n — we only partition nums1, j is auto-calculated
+//
+// FOUR VALUES AROUND PARTITION:
+//   i = partition in nums1 (binary search on this)
+//   j = (m+n+1)/2 - i     (auto-calculated from i)
+//
+//   L1 = nums1[i-1]  → largest element on left of nums1 partition
+//   R1 = nums1[i]    → smallest element on right of nums1 partition
+//   L2 = nums2[j-1]  → largest element on left of nums2 partition
+//   R2 = nums2[j]    → smallest element on right of nums2 partition
+//
+// VALID PARTITION CONDITION:
+//   L1 <= R2  AND  L2 <= R1
+//   (left of nums1 <= right of nums2)
+//   (left of nums2 <= right of nums1)
+//
+// TWO FAILURE CASES AND HOW TO FIX:
+//   Case 1: L1 > R2
+//     Too many elements taken from nums1
+//     L1 ended up on left but belongs on right
+//     Fix: move partition LEFT in nums1 → hi = i-1
+//
+//   Case 2: L2 > R1
+//     Too few elements taken from nums1
+//     Need more from nums1 to balance
+//     Fix: move partition RIGHT in nums1 → lo = i+1
+//
+// EDGE CASES — PARTITION AT BOUNDARY:
+//   i=0 → no left element in nums1  → L1 = Integer.MIN_VALUE (-infinity)
+//   i=m → no right element in nums1 → R1 = Integer.MAX_VALUE (+infinity)
+//   j=0 → no left element in nums2  → L2 = Integer.MIN_VALUE
+//   j=n → no right element in nums2 → R2 = Integer.MAX_VALUE
+//   Using MIN/MAX_VALUE ensures boundary conditions never affect valid comparisons
+//
+// MEDIAN CALCULATION ONCE VALID PARTITION FOUND:
+//   odd total  → max(L1, L2)                          (middle element)
+//   even total → (max(L1, L2) + min(R1, R2)) / 2.0   (average of two middle elements)
+//
+// COMMON BUG — SWAP:
+//   int[] temp = nums1;
+//   nums1 = nums2;
+//   nums2 = temp;     ← must use temp, NOT nums1
+//   nums2 = nums1 would assign already-overwritten nums1 back to nums2
+// ─────────────────────────────────────────────────────────────────
+class Solution {
+    public double findMedianSortedArrays(int[] nums1, int[] nums2) {
+
+        // always binary search on smaller array — keeps j valid
+        if (nums1.length > nums2.length) {
+            int[] temp = nums1;
+            nums1 = nums2;
+            nums2 = temp;
+        }
+
+        int m = nums1.length;
+        int n = nums2.length;
+
+        // binary search range — partition position in nums1 only
+        int lo = 0, hi = m;
+
+        while (lo <= hi) {
+            // i = elements taken from nums1 for left half
+            int i = lo + (hi - lo) / 2;
+            // j = remaining elements needed from nums2 for left half
+            int j = (m + n + 1) / 2 - i;
+
+            // four values around partition — handle boundary edge cases
+            int L1 = (i == 0) ? Integer.MIN_VALUE : nums1[i - 1];
+            int R1 = (i == m) ? Integer.MAX_VALUE : nums1[i];
+            int L2 = (j == 0) ? Integer.MIN_VALUE : nums2[j - 1];
+            int R2 = (j == n) ? Integer.MAX_VALUE : nums2[j];
+
+            if (L1 <= R2 && L2 <= R1) {
+                // valid partition — calculate median
+                if ((m + n) % 2 == 1) {
+                    return Math.max(L1, L2);                              // odd — middle element
+                } else {
+                    return (Math.max(L1, L2) + Math.min(R1, R2)) / 2.0; // even — average of two middles
+                }
+            } else if (L1 > R2) {
+                hi = i - 1;   // too many from nums1 — move partition left
+            } else {
+                lo = i + 1;   // too few from nums1 — move partition right
+            }
+        }
+
+        return 0.0;
+    }
+}
