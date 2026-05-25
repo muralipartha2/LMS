@@ -1,0 +1,58 @@
+// LC 374 — Guess Number Higher or Lower
+// Problem: Find the picked number using guess(num) API
+//          guess() returns 0 (correct), -1 (too high), 1 (too low)
+// Key insight: Classic binary search — guess(mid) replaces target comparison
+//
+// ─────────────────────────────────────────────────────────────────
+// BRUTE FORCE — O(n) time, O(1) space
+// WHY: Linear scan from 1 to n — call guess() on every number
+// HOW: Return first number where guess() returns 0
+// ─────────────────────────────────────────────────────────────────
+public class Solution extends GuessGame {
+    public int guessNumber(int n) {
+
+        // scan every number from 1 to n
+        for (int i = 1; i <= n; i++) {
+            if (guess(i) == 0) return i;
+        }
+        return -1;
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// OPTIMAL — O(log n) time, O(1) space
+// WHY: Search range [1..n] is ordered — binary search eliminates half each step
+// HOW: Classic template — guess(mid) replaces nums[mid] == target
+//      guess(mid) ==  0 → correct → return mid
+//      guess(mid) == -1 → too high → hi = mid - 1
+//      guess(mid) ==  1 → too low  → lo = mid + 1
+// NOTE: n can be Integer.MAX_VALUE — must use lo+(hi-lo)/2 to avoid overflow
+//       Same constraint as LC 278 — same overflow lesson applies
+//       Store guess(mid) in variable — avoid calling API twice per iteration
+//       lo = 1 not 0 — numbers start from 1
+// ─────────────────────────────────────────────────────────────────
+public class Solution extends GuessGame {
+    public int guessNumber(int n) {
+
+        // search range [1..n] — numbers start from 1
+        int lo = 1, hi = n;
+
+        while (lo <= hi) {
+            // safe mid — n can be Integer.MAX_VALUE, lo+hi overflows
+            int mid = lo + (hi - lo) / 2;
+
+            // store result — avoid calling guess(mid) twice per iteration
+            int result = guess(mid);
+
+            if (result == 0) {
+                return mid;              // correct guess
+            } else if (result == -1) {
+                hi = mid - 1;            // guess too high — search left
+            } else {
+                lo = mid + 1;            // guess too low — search right
+            }
+        }
+
+        return -1;
+    }
+}
