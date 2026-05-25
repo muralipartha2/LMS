@@ -1,0 +1,82 @@
+// LC 81 — Search in Rotated Sorted Array II (with duplicates)
+// Problem: Search target in rotated sorted array that may contain duplicates
+// Key insight: Extension of LC 33 — one extra case when duplicates prevent
+//              identifying sorted half: nums[lo]==nums[mid]==nums[hi] → shrink both boundaries
+//
+// ─────────────────────────────────────────────────────────────────
+// BRUTE FORCE — O(n) time, O(1) space
+// WHY: Linear scan — no exploitation of sorted property
+// HOW: Check every element until target found
+// ─────────────────────────────────────────────────────────────────
+class Solution {
+    public boolean search(int[] nums, int target) {
+
+        // scan every element
+        for (int num : nums) {
+            if (num == target) return true;
+        }
+        return false;
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// OPTIMAL — O(log n) average, O(n) worst case, O(1) space
+// WHY: Same as LC 33 but duplicates create ambiguity in identifying sorted half
+// HOW: Same two-step logic as LC 33:
+//      Step 1 — identify sorted half
+//      Step 2 — check if target in sorted half's range
+//
+// KEY DIFFERENCE FROM LC 33 — duplicate handling:
+//      When nums[lo]==nums[mid]==nums[hi] → cannot determine which half is sorted
+//      Example: [1,0,1,1,1] → nums[lo]=1, nums[mid]=1, nums[hi]=1
+//               Left [1,0,1] not sorted, Right [1,1,1] looks sorted — ambiguous!
+//      Fix: shrink both boundaries → lo++, hi--
+//      This eliminates ambiguous duplicates and continues safely
+//
+// WHY ORIGINAL APPROACH FAILED:
+//      Checking target direction FIRST then sorted half → conditions overlap and miss cases
+//      Example: target<nums[mid] AND nums[mid]>nums[lo] doesn't mean target is in left half
+//               nums=[4,5,6,7,0,1,2], target=0 → target<mid but target is in RIGHT half
+//      Correct order: identify sorted half FIRST → then check target range
+//
+// WORST CASE O(n):
+//      When all elements are duplicates e.g. [1,1,1,1,1]
+//      lo++ hi-- every iteration → degrades to linear scan
+//
+// NOTE: lo <= hi — searching for target (same as LC 33)
+//       Compare nums[lo] vs nums[mid] to identify sorted half
+// ─────────────────────────────────────────────────────────────────
+class Solution {
+    public boolean search(int[] nums, int target) {
+
+        int lo = 0, hi = nums.length - 1;
+
+        while (lo <= hi) {
+            int mid = lo + (hi - lo) / 2;
+
+            if (nums[mid] == target) return true;
+
+            // duplicates — cannot identify sorted half → shrink both boundaries
+            if (nums[lo] == nums[mid] && nums[mid] == nums[hi]) {
+                lo++;
+                hi--;
+            } else if (nums[lo] <= nums[mid]) {
+                // left half sorted
+                if (nums[lo] <= target && target < nums[mid]) {
+                    hi = mid - 1;   // target in left half
+                } else {
+                    lo = mid + 1;   // target in right half
+                }
+            } else {
+                // right half sorted
+                if (target > nums[mid] && target <= nums[hi]) {
+                    lo = mid + 1;   // target in right half
+                } else {
+                    hi = mid - 1;   // target in left half
+                }
+            }
+        }
+
+        return false;
+    }
+}
