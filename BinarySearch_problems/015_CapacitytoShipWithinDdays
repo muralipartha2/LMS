@@ -1,0 +1,105 @@
+// LC 1011 — Capacity To Ship Packages Within D Days
+// Problem: Find minimum ship capacity to ship all packages in order within d days
+// Key insight: Answer space BS — search capacity range [max(weights)..sum(weights)]
+//              For each candidate capacity, check if all packages ship within d days
+//
+// ─────────────────────────────────────────────────────────────────
+// BRUTE FORCE — O(sum(weights) × n) time, O(1) space
+// WHY: Try every capacity from max(weights) upward — first valid = minimum
+// HOW: For each capacity, simulate shipping day by day
+//      Return first capacity where days needed <= d
+// ─────────────────────────────────────────────────────────────────
+class Solution {
+    public int shipWithinDays(int[] weights, int days) {
+
+        int lo = 0, hi = 0;
+        for (int w : weights) { lo = Math.max(lo, w); hi += w; }
+
+        // try every capacity from min to max
+        for (int cap = lo; cap <= hi; cap++) {
+            if (canShip(weights, days, cap)) return cap;
+        }
+        return hi;
+    }
+
+    private boolean canShip(int[] weights, int days, int capacity) {
+        int daysNeeded = 1, current = 0;
+        for (int weight : weights) {
+            if (current + weight > capacity) { daysNeeded++; current = 0; }
+            current += weight;
+        }
+        return daysNeeded <= days;
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// OPTIMAL — O(n log(sum(weights))) time, O(1) space
+// WHY: Capacity range [max(weights)..sum(weights)] is ordered
+//      Binary search eliminates half the range each step
+// HOW: Answer space BS — same pattern as LC 875 Koko Eating Bananas
+//
+// SEARCH RANGE:
+//   lo = max(weights) — packages shipped in order, can never split one package
+//                       ship must carry heaviest package → minimum capacity
+//   hi = sum(weights) — carry everything in 1 day → maximum capacity
+//   NOTE: sum(weights)/d is WRONG as lower bound
+//         Example: weights=[10,1,1,1], d=3 → sum/d=4 but max=10
+//         Ship can't carry first package at capacity 4 ✗
+//
+// CONDITION CHECK — canShip(capacity):
+//   Simulate shipping day by day in order
+//   Load packages until adding next exceeds capacity → start new day
+//   Count days needed → return daysNeeded <= d
+//   Same role as totalHours <= h in Koko Eating Bananas
+//
+// DIRECTION — minimizing capacity:
+//   canShip true  → valid, try smaller → hi = mid-1
+//   canShip false → need more capacity → lo = mid+1
+//
+// SIMILARITY TO LC 875 KOKO EATING BANANAS:
+//   Koko: minimize speed, condition = finish in h hours
+//   Ship: minimize capacity, condition = ship in d days
+//   Same binary search structure — only condition check differs
+// ─────────────────────────────────────────────────────────────────
+class Solution {
+    public int shipWithinDays(int[] weights, int days) {
+
+        // lo = max weight, hi = sum of weights
+        int lo = 0, hi = 0;
+        for (int w : weights) {
+            lo = Math.max(lo, w);   // must carry heaviest package
+            hi += w;                // worst case — carry all in one day
+        }
+
+        int result = hi;
+
+        while (lo <= hi) {
+            int mid = lo + (hi - lo) / 2;
+
+            if (canShip(weights, days, mid)) {
+                result = mid;        // valid — record, try smaller capacity
+                hi = mid - 1;        // minimizing — go left
+            } else {
+                lo = mid + 1;        // not enough capacity — go right
+            }
+        }
+
+        return result;
+    }
+
+    // simulate shipping — count days needed at given capacity
+    private boolean canShip(int[] weights, int days, int capacity) {
+        int daysNeeded = 1, current = 0;
+
+        for (int weight : weights) {
+            // adding this package exceeds capacity — start new day
+            if (current + weight > capacity) {
+                daysNeeded++;
+                current = 0;
+            }
+            current += weight;
+        }
+
+        return daysNeeded <= days;  // can we finish within d days?
+    }
+}
