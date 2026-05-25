@@ -1,0 +1,99 @@
+// LC 410 — Split Array Largest Sum
+// Problem: Split array into k subarrays minimizing the largest subarray sum
+// Key insight: Answer space BS — identical pattern to LC 1011 Capacity to Ship Packages
+//              Minimize largest subarray sum = minimize ship capacity
+//              Reframing: "split into k subarrays" = "ship in k days"
+//
+// ─────────────────────────────────────────────────────────────────
+// BRUTE FORCE — O(sum(nums) × n) time, O(1) space
+// WHY: Try every possible largest sum from max(nums) upward
+// HOW: For each candidate sum, greedily check if array fits in <= k subarrays
+//      Return first valid candidate = minimum largest sum
+// ─────────────────────────────────────────────────────────────────
+class Solution {
+    public int splitArray(int[] nums, int k) {
+
+        int lo = 0, hi = 0;
+        for (int num : nums) { lo = Math.max(lo, num); hi += num; }
+
+        // try every capacity from min to max
+        for (int cap = lo; cap <= hi; cap++) {
+            int subarrays = 1, current = 0;
+            for (int num : nums) {
+                if (current + num > cap) { subarrays++; current = 0; }
+                current += num;
+            }
+            if (subarrays <= k) return cap;  // first valid = minimum
+        }
+        return hi;
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// OPTIMAL — O(n log(sum(nums))) time, O(1) space
+// WHY: Answer range [max(nums)..sum(nums)] is ordered — binary search
+// HOW: Binary search on answer space — condition check inlined in while loop
+//
+// SEARCH RANGE:
+//   lo = max(nums)  — each subarray must hold at least one element
+//                     largest single element = minimum possible answer
+//   hi = sum(nums)  — everything in one subarray = maximum possible answer
+//
+// CONDITION CHECK (inlined):
+//   Greedily fill subarrays — keep adding elements while sum <= mid
+//   When adding next element exceeds mid → start new subarray
+//   Count subarrays needed → if <= k, mid is a valid answer
+//
+// DIRECTION — minimizing largest sum:
+//   subarrays <= k → valid, record result, try smaller → hi = mid-1
+//   subarrays > k  → need larger sum per subarray     → lo = mid+1
+//
+// KEY INSIGHT — WHY GREEDY WORKS FOR CONDITION CHECK:
+//   We want to know if mid is achievable in k subarrays
+//   Greedy fills each subarray as much as possible
+//   If greedy needs > k subarrays → no arrangement can do it in k ✓
+//
+// IDENTICAL TO LC 1011:
+//   LC 1011: ship capacity per day, d days
+//   LC 410:  max subarray sum, k splits
+//   Same binary search, same greedy condition, same direction
+// ─────────────────────────────────────────────────────────────────
+class Solution {
+    public int splitArray(int[] nums, int k) {
+
+        // lo = max element (min possible answer)
+        // hi = sum of all elements (max possible answer)
+        int lo = 0, hi = 0;
+        for (int num : nums) {
+            lo = Math.max(lo, num);
+            hi += num;
+        }
+
+        int result = hi;
+
+        while (lo <= hi) {
+            // mid = candidate for largest subarray sum
+            int mid = lo + (hi - lo) / 2;
+
+            // greedily count subarrays needed at this mid capacity
+            int subarrays = 1, current = 0;
+            for (int num : nums) {
+                // adding num exceeds mid — start new subarray
+                if (current + num > mid) {
+                    subarrays++;
+                    current = 0;
+                }
+                current += num;
+            }
+
+            if (subarrays <= k) {
+                result = mid;        // valid split — record, try smaller
+                hi = mid - 1;        // minimizing — go left
+            } else {
+                lo = mid + 1;        // too many subarrays — need larger mid
+            }
+        }
+
+        return result;
+    }
+}
