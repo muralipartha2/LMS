@@ -17,67 +17,75 @@ class Solution {
 
         // try every capacity from min to max
         for (int cap = lo; cap <= hi; cap++) {
-            if (canShip(weights, days, cap)) return cap;
+            int daysNeeded = 1, current = 0;
+            for (int w : weights) {
+                if (current + w > cap) { daysNeeded++; current = 0; }
+                current += w;
+            }
+            if (daysNeeded <= days) return cap;  // first valid = minimum
         }
         return hi;
-    }
-
-    private boolean canShip(int[] weights, int days, int capacity) {
-        int daysNeeded = 1, current = 0;
-        for (int weight : weights) {
-            if (current + weight > capacity) { daysNeeded++; current = 0; }
-            current += weight;
-        }
-        return daysNeeded <= days;
     }
 }
 
 // ─────────────────────────────────────────────────────────────────
 // OPTIMAL — O(n log(sum(weights))) time, O(1) space
-// WHY: Capacity range [max(weights)..sum(weights)] is ordered
-//      Binary search eliminates half the range each step
-// HOW: Answer space BS — same pattern as LC 875 Koko Eating Bananas
+// WHY: Capacity range [max(weights)..sum(weights)] is ordered — binary search
+// HOW: Binary search on answer space — condition check inlined in while loop
 //
 // SEARCH RANGE:
-//   lo = max(weights) — packages shipped in order, can never split one package
+//   lo = max(weights) — packages in order, cannot split one package
 //                       ship must carry heaviest package → minimum capacity
 //   hi = sum(weights) — carry everything in 1 day → maximum capacity
 //   NOTE: sum(weights)/d is WRONG as lower bound
 //         Example: weights=[10,1,1,1], d=3 → sum/d=4 but max=10
 //         Ship can't carry first package at capacity 4 ✗
 //
-// CONDITION CHECK — canShip(capacity):
-//   Simulate shipping day by day in order
-//   Load packages until adding next exceeds capacity → start new day
-//   Count days needed → return daysNeeded <= d
-//   Same role as totalHours <= h in Koko Eating Bananas
+// CONDITION CHECK (inlined):
+//   Simulate shipping — load packages until adding next exceeds capacity
+//   When exceeded → increment days, reset current load, load current package
+//   Count days needed → if <= d, capacity mid is valid
 //
 // DIRECTION — minimizing capacity:
-//   canShip true  → valid, try smaller → hi = mid-1
-//   canShip false → need more capacity → lo = mid+1
+//   daysNeeded <= d → valid, record result, try smaller → hi = mid-1
+//   daysNeeded > d  → need more capacity               → lo = mid+1
 //
-// SIMILARITY TO LC 875 KOKO EATING BANANAS:
-//   Koko: minimize speed, condition = finish in h hours
-//   Ship: minimize capacity, condition = ship in d days
+// SIMILARITY TO LC 875 KOKO AND LC 410 SPLIT ARRAY:
+//   All three: minimize X such that condition(X) is satisfied
 //   Same binary search structure — only condition check differs
+//   Koko:  speed,    hours per pile  = ceil(pile/speed)
+//   Ship:  capacity, days per load   = greedy fill
+//   Split: max sum,  subarrays count = greedy fill
 // ─────────────────────────────────────────────────────────────────
 class Solution {
     public int shipWithinDays(int[] weights, int days) {
 
-        // lo = max weight, hi = sum of weights
+        // lo = max weight (min capacity), hi = total weight (max capacity)
         int lo = 0, hi = 0;
         for (int w : weights) {
             lo = Math.max(lo, w);   // must carry heaviest package
-            hi += w;                // worst case — carry all in one day
+            hi += w;                // worst case — ship all in one day
         }
 
         int result = hi;
 
         while (lo <= hi) {
+            // mid = candidate ship capacity
             int mid = lo + (hi - lo) / 2;
 
-            if (canShip(weights, days, mid)) {
-                result = mid;        // valid — record, try smaller capacity
+            // simulate shipping — count days needed at capacity mid
+            int daysNeeded = 1, current = 0;
+            for (int w : weights) {
+                // adding package exceeds capacity — start new day
+                if (current + w > mid) {
+                    daysNeeded++;
+                    current = 0;
+                }
+                current += w;
+            }
+
+            if (daysNeeded <= days) {
+                result = mid;        // valid capacity — record, try smaller
                 hi = mid - 1;        // minimizing — go left
             } else {
                 lo = mid + 1;        // not enough capacity — go right
@@ -85,21 +93,5 @@ class Solution {
         }
 
         return result;
-    }
-
-    // simulate shipping — count days needed at given capacity
-    private boolean canShip(int[] weights, int days, int capacity) {
-        int daysNeeded = 1, current = 0;
-
-        for (int weight : weights) {
-            // adding this package exceeds capacity — start new day
-            if (current + weight > capacity) {
-                daysNeeded++;
-                current = 0;
-            }
-            current += weight;
-        }
-
-        return daysNeeded <= days;  // can we finish within d days?
     }
 }
