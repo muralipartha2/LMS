@@ -1,0 +1,104 @@
+/*
+ * LC 1 — Two Sum
+ *
+ * PROBLEM:
+ * Given integer array nums and integer target, return indices of
+ * two numbers that add up to target. Exactly one solution guaranteed.
+ *
+ * CONSTRAINTS:
+ * - 2 <= nums.length <= 10^4   → always at least one pair
+ * - -10^9 <= nums[i] <= 10^9  → negatives possible
+ * - Exactly one valid solution → no need to handle multiple answers
+ * - Cannot use same element twice → i != j
+ * - Return indices in any order
+ *
+ * ALL APPROACHES:
+ * ┌─────────────┬──────────────────────────────────┬───────┬──────┐
+ * │ Approach    │ Idea                             │ TC    │ SC   │
+ * ├─────────────┼──────────────────────────────────┼───────┼──────┤
+ * │ Brute Force │ Every pair, check sum == target  │ O(n²) │ O(1) │
+ * │ HashMap     │ Complement lookup                │ O(n)  │ O(n) │
+ * └─────────────┴──────────────────────────────────┴───────┴──────┘
+ *
+ * ─────────────────────────────────────────
+ * APPROACH 1 — BRUTE FORCE
+ * ─────────────────────────────────────────
+ * WHY: Simplest — check every possible pair.
+ * HOW: Two nested loops. For every pair (i,j) where j > i,
+ *      check if nums[i] + nums[j] == target → return {i, j}.
+ *
+ * REJECTED BECAUSE:
+ * O(n²) — for n=10^4 that's 10^8 operations. TLE risk.
+ *
+ * TC: O(n²) — n*(n-1)/2 pairs checked worst case
+ * SC: O(1)  — no extra space
+ */
+public int[] twoSumBrute(int[] nums, int target) {
+    for (int i = 0; i < nums.length; i++) {
+        // j starts at i+1 — avoid using same element twice
+        for (int j = i + 1; j < nums.length; j++) {
+            if (nums[i] + nums[j] == target) {
+                return new int[]{i, j};
+            }
+        }
+    }
+    // guaranteed solution exists — never reaches here
+    return new int[]{};
+}
+
+/*
+ * ─────────────────────────────────────────
+ * APPROACH 2 — HASHMAP (Optimal)
+ * ─────────────────────────────────────────
+ * WHY HashMap:
+ * For each nums[i], we need to know if (target - nums[i]) exists.
+ * That is a complement lookup — classic HashMap pattern.
+ * Store value → index mapping for O(1) retrieval.
+ *
+ * HOW:
+ * Single pass. For each index i:
+ *   complement = target - nums[i]
+ *   if map.containsKey(complement) → found pair → return indices
+ *   else → map.put(nums[i], i) and continue
+ *
+ * CRITICAL — CHECK FIRST, PUT AFTER:
+ * Must check complement BEFORE putting current element.
+ * If put first:
+ *   nums=[3,3], target=6
+ *   i=0: put(3,0) → map:{3→0}
+ *   i=1: put(3,1) → map:{3→1} ← overwrites index 0!
+ *        complement=3 found at index 1 → return [1,1] ❌ same index twice!
+ * Check first:
+ *   i=0: complement=3? map empty → NO → put(3,0)
+ *   i=1: complement=3? YES at index 0 → return [0,1] ✅
+ *
+ * WHY store value as key, index as value:
+ * We search by value (complement lookup) → value must be key for O(1)
+ * We return indices → index must be stored as value
+ * containsValue() would be O(n) → wrong choice here
+ *
+ * TC: O(n)  — single pass, O(1) per containsKey/put
+ * SC: O(n)  — worst case all elements stored before pair found
+ *
+ * Best case:  O(1) — complement found at index 1
+ * Worst case: O(n) — pair at last two indices
+ *
+ * Edge cases:
+ * - nums=[3,3], target=6 → handled by check-first pattern ✅
+ * - Negatives → HashMap handles any Integer value ✅
+ * - Guaranteed one solution → no need for not-found handling ✅
+ */
+public int[] twoSum(int[] nums, int target) {
+    Map<Integer, Integer> map = new HashMap<>();
+    for (int i = 0; i < nums.length; i++) {
+        int complement = target - nums[i];
+        // check first — avoid using same index twice
+        if (map.containsKey(complement)) {
+            return new int[]{map.get(complement), i};
+        }
+        // put after — only store current element after checking
+        map.put(nums[i], i);
+    }
+    // guaranteed solution exists — never reaches here
+    return new int[]{};
+}
