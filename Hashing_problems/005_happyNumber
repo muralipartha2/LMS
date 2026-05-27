@@ -1,0 +1,104 @@
+/*
+ * LC 202 — Happy Number
+ *
+ * PROBLEM:
+ * A happy number is defined by the following process:
+ * - Start with any positive integer n
+ * - Replace n by sum of squares of its digits
+ * - Repeat until n equals 1 (happy) or loops endlessly (unhappy)
+ * Return true if n is happy, false otherwise.
+ *
+ * CONSTRAINTS:
+ * - 1 <= n <= 2^31 - 1
+ * - No overflow risk — after first step, n drops to max 810
+ *   (max digit 9, max 10 digits: 9² × 10 = 810)
+ *   From 810 onwards number never grows large enough to overflow int
+ *   → int is safe, long is unnecessary
+ *
+ * CORE INSIGHT — THIS IS A CYCLE DETECTION PROBLEM:
+ * Happy number → sequence eventually reaches 1
+ * Unhappy number → sequence gets stuck in infinite cycle, never reaches 1
+ * Example cycle: 2→4→16→37→58→89→145→42→20→4→ (back to 4, cycle!)
+ * "Have we seen this number before?" → HashSet existence check
+ *
+ * ALL APPROACHES:
+ * ┌──────────────────┬─────────────────────────────┬──────────┬──────────┐
+ * │ Approach         │ Idea                        │ TC       │ SC       │
+ * ├──────────────────┼─────────────────────────────┼──────────┼──────────┤
+ * │ HashSet          │ Store seen results          │ O(log n) │ O(log n) │
+ * │ Floyd's Cycle    │ Fast & slow pointers        │ O(log n) │ O(1)     │
+ * └──────────────────┴─────────────────────────────┴──────────┴──────────┘
+ *
+ * WHY TC is O(log n) not O(n):
+ * Numbers shrink rapidly after each step.
+ * A k-digit number has sum of squares at most 81k.
+ * 81k has at most 3 digits → numbers reduce to 3 digits quickly.
+ * Cycle length within 3-digit numbers is bounded → O(log n) total steps.
+ *
+ * FLOYD'S CYCLE — not coded (requires Linked List pattern knowledge)
+ * Fast pointer takes 2 steps, slow takes 1 step per iteration.
+ * If they meet → cycle. If fast reaches 1 → happy.
+ * SC: O(1) — no extra space needed. Revisit after Linked List session.
+ *
+ * ─────────────────────────────────────────
+ * APPROACH 1 — HASHSET (Optimal for now)
+ * ─────────────────────────────────────────
+ * WHY HashSet:
+ * Need O(1) existence check — "have we seen this sum before?"
+ * Same pattern as Contains Duplicate — HashSet cycle detection.
+ *
+ * HOW:
+ * Outer loop — while set.add(n) returns true:
+ *   set.add(n) returns false when n already exists → cycle detected → exit
+ *   No need for explicit contains() check — add() return value handles it
+ *
+ * WHEN DOES OUTER LOOP EXIT? Two cases:
+ *   Case 1: n=1 added to set, next iteration sum=1 again
+ *           set.add(1) returns false → exit → return n==1 → true ✅
+ *   Case 2: some intermediate sum seen before
+ *           set.add(sum) returns false → exit → return n==1 → false ✅
+ * return n==1 elegantly handles BOTH exit cases with one statement.
+ *
+ * Inner loop — digit extraction:
+ *   while n > 0:
+ *     digit = n % 10    → extract last digit
+ *     sum += digit²     → square and accumulate
+ *     n /= 10           → remove last digit
+ *
+ * Dry run — n=19 (happy):
+ *   add(19)→true:  9²+1²=82  → n=82
+ *   add(82)→true:  2²+8²=68  → n=68
+ *   add(68)→true:  8²+6²=100 → n=100
+ *   add(100)→true: 0²+0²+1²=1→ n=1
+ *   add(1)→true:   1²=1      → n=1
+ *   add(1)→FALSE   → exit loop
+ *   return n==1 → true ✅
+ *
+ * Dry run — n=2 (unhappy):
+ *   2→4→16→37→58→89→145→42→20→4
+ *   add(4)→FALSE (seen before) → exit loop
+ *   return n==1 → false ✅
+ *
+ * TC: O(log n) — numbers shrink rapidly, bounded cycle length
+ * SC: O(log n) — HashSet stores intermediate sums until cycle found
+ *
+ * Edge cases:
+ * - n=1 → add(1)→true, sum=1, add(1)→false → return true ✅
+ * - n=7 → known happy number, reaches 1 eventually ✅
+ */
+public boolean isHappy(int n) {
+    Set<Integer> set = new HashSet<>();
+    // loop exits when n is seen again (cycle) or n=1 seen twice
+    while (set.add(n)) {
+        int sum = 0;
+        // inner loop — extract each digit, square and accumulate
+        while (n > 0) {
+            int digit = n % 10;   // last digit
+            sum += digit * digit; // square it
+            n /= 10;              // remove last digit
+        }
+        n = sum; // replace n with sum of squares
+    }
+    // n==1 → happy | n!=1 → caught in cycle → unhappy
+    return n == 1;
+}
