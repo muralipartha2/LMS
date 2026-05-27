@@ -1,0 +1,142 @@
+/*
+ * LC 242 — Valid Anagram
+ *
+ * PROBLEM:
+ * Given two strings s and t, return true if t is an anagram of s.
+ * Anagram — same characters, same frequencies, any order.
+ *
+ * CONSTRAINTS:
+ * - 1 <= s.length, t.length <= 5 * 10^4
+ * - s and t consist of lowercase English letters only
+ * - Only 26 possible characters → int[26] sufficient, no need for HashMap
+ * - If lengths differ → cannot be anagram → return false immediately
+ *
+ * ALL APPROACHES:
+ * ┌─────────────────┬────────────────────────────────┬──────────┬──────┐
+ * │ Approach        │ Idea                           │ TC       │ SC   │
+ * ├─────────────────┼────────────────────────────────┼──────────┼──────┤
+ * │ Brute Force     │ Sort both → compare            │ O(nlogn) │ O(n) │
+ * │ HashMap         │ Freq map char → count          │ O(n)     │ O(n) │
+ * │ int[26] array   │ Freq array, fixed 26 slots     │ O(n)     │ O(1) │
+ * └─────────────────┴────────────────────────────────┴──────────┴──────┘
+ *
+ * WHY int[26] beats HashMap:
+ * - Key space is exactly 26 — known and fixed upfront
+ * - int[26] is contiguous memory, zero object overhead
+ * - HashMap has boxing overhead (char → Character), bucket array,
+ *   Node objects, hashing computation — all unnecessary here
+ * - int[26] SC is O(1) — fixed 26 slots regardless of input size
+ * - HashMap SC is O(n) — grows with unique characters
+ * - Both O(n) TC but int[26] has smaller constant factor
+ *
+ * ─────────────────────────────────────────
+ * APPROACH 1 — BRUTE FORCE (Sorting)
+ * ─────────────────────────────────────────
+ * WHY: Simplest insight — anagrams have identical sorted forms.
+ * HOW: Sort both strings → compare character by character.
+ *
+ * KEY INSIGHT:
+ * "anagram" → sorted → "aaagmnr"
+ * "nagaram" → sorted → "aaagmnr"
+ * Equal → anagram ✅
+ *
+ * TRADEOFF:
+ * Simple but O(n log n) — sorting dominates.
+ * Converts strings to char arrays → O(n) extra space.
+ *
+ * TC: O(n log n) — dominated by sort
+ * SC: O(n)       — char arrays for sorting
+ */
+public boolean isAnagramBrute(String s, String t) {
+    if (s.length() != t.length()) return false;
+    // convert to char array — strings immutable in Java
+    char[] sArr = s.toCharArray();
+    char[] tArr = t.toCharArray();
+    Arrays.sort(sArr);
+    Arrays.sort(tArr);
+    // if sorted forms equal → anagram
+    return Arrays.equals(sArr, tArr);
+}
+
+/*
+ * ─────────────────────────────────────────
+ * APPROACH 2 — HASHMAP
+ * ─────────────────────────────────────────
+ * WHY: O(n) frequency counting without sorting.
+ * HOW:
+ *   Pass 1 — build freq map from s, incrementing counts
+ *   Pass 2 — decrement counts using t
+ *       If any char in t not in map OR count goes below 0 → false
+ *   All counts must be zero at end → anagram
+ *
+ * WHY NOT int[26] here:
+ * HashMap generalizes to Unicode strings — if constraint changes
+ * from lowercase English to any character, HashMap handles it.
+ * int[26] would break. So HashMap is better for the general case.
+ *
+ * TC: O(n) — two passes, O(1) per get/put
+ * SC: O(n) — at most 26 entries but O(n) conceptually
+ *
+ * FOLLOW UP — what if inputs contain Unicode?
+ * int[26] breaks — only handles lowercase English.
+ * HashMap handles any character → use HashMap for Unicode case.
+ */
+public boolean isAnagramHashMap(String s, String t) {
+    if (s.length() != t.length()) return false;
+    Map<Character, Integer> freq = new HashMap<>();
+    // pass 1 — build frequency map from s
+    for (char c : s.toCharArray()) {
+        freq.put(c, freq.getOrDefault(c, 0) + 1);
+    }
+    // pass 2 — decrement using t
+    for (char c : t.toCharArray()) {
+        if (!freq.containsKey(c) || freq.get(c) == 0) return false;
+        freq.put(c, freq.get(c) - 1);
+    }
+    return true;
+}
+
+/*
+ * ─────────────────────────────────────────
+ * APPROACH 3 — int[26] FREQUENCY ARRAY (Optimal)
+ * ─────────────────────────────────────────
+ * WHY int[26]:
+ * Only 26 lowercase letters possible → fixed key space.
+ * Use character as index: index = c - 'a'
+ *   'a' - 'a' = 0, 'b' - 'a' = 1, ... 'z' - 'a' = 25
+ * No hashing, no boxing, no object overhead.
+ * Strictly better than HashMap when key space is small and known.
+ *
+ * HOW:
+ * Single int[26] array.
+ * Pass 1 — increment count for each char in s.
+ * Pass 2 — decrement count for each char in t.
+ * Pass 3 — if any index != 0 → frequencies differ → not anagram.
+ *
+ * EARLY EXIT OPTIMIZATION:
+ * During pass 2, if count goes below 0 → t has more of that char
+ * than s → return false immediately, no need for pass 3.
+ *
+ * TC: O(n)  — two passes over strings + one pass over 26 slots = O(n)
+ * SC: O(1)  — fixed int[26] regardless of input size
+ *
+ * Edge cases:
+ * - s="a", t="a"  → freq[0] incremented then decremented → all zero ✅
+ * - s="aa", t="ab" → freq['a'-'a'] goes negative during pass 2 → false ✅
+ * - Different lengths → caught before array work ✅
+ */
+public boolean isAnagram(String s, String t) {
+    if (s.length() != t.length()) return false;
+    int[] freq = new int[26];
+    // pass 1 — increment for s
+    for (char c : s.toCharArray()) {
+        freq[c - 'a']++;
+    }
+    // pass 2 — decrement for t, early exit if count goes negative
+    for (char c : t.toCharArray()) {
+        freq[c - 'a']--;
+        // more occurrences in t than s → not anagram
+        if (freq[c - 'a'] < 0) return false;
+    }
+    return true;
+}
