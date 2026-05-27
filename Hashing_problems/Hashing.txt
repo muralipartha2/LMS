@@ -1,0 +1,298 @@
+/*
+ * ═══════════════════════════════════════════════════════════════
+ * HASHING — COMPLETE THEORY & INTERNALS
+ * ═══════════════════════════════════════════════════════════════
+ *
+ * ─────────────────────────────────────────
+ * 1. THE PROBLEM BEFORE HASHING
+ * ─────────────────────────────────────────
+ * Imagine a phone directory with 1 million names, sorted alphabetically.
+ *
+ * Q: "Is Murali in this list?"
+ * → Linear scan A to M         : O(n) worst case
+ * → Binary search (sorted)     : O(log n)
+ *
+ * Q: "Is there anyone whose number ends in 9876?"
+ * → Binary search won't help — data not sorted by phone number
+ * → Back to full scan          : O(n)
+ *
+ * CORE PROBLEM:
+ * Arrays and sorted structures are great for ordered access.
+ * For arbitrary lookups — "does X exist?", "how many times did X appear?",
+ * "what value is mapped to X?" — they are slow.
+ *
+ * ─────────────────────────────────────────
+ * 2. WHAT HASHING SOLVES
+ * ─────────────────────────────────────────
+ * Hashing gives O(1) average for three fundamental operations:
+ *
+ * ┌──────────────────────────────┬──────────────────┬────────────┐
+ * │ Operation                    │ Without Hashing  │ With Hash  │
+ * ├──────────────────────────────┼──────────────────┼────────────┤
+ * │ Does X exist?                │ O(n) / O(log n)  │ O(1)       │
+ * │ How many times did X appear? │ O(n)             │ O(1)       │
+ * │ What value is mapped to X?   │ O(n)             │ O(1)       │
+ * └──────────────────────────────┴──────────────────┴────────────┘
+ *
+ * The deal: TRADE SPACE FOR TIME.
+ *
+ * ─────────────────────────────────────────
+ * 3. HOW HASHING WORKS — THE CORE IDEA
+ * ─────────────────────────────────────────
+ * Convert key → array index using a hash function.
+ *
+ * Example: store "murali"
+ *   hash("murali") → some integer → mod 10 → bucket index 3
+ *   "murali" lives at index 3.
+ *
+ * Lookup later:
+ *   hash("murali") → same index 3 → O(1) retrieval.
+ *
+ * A good hash function must be:
+ *   - Deterministic  : same input → always same output
+ *   - Fast           : O(1) to compute
+ *   - Uniform        : spreads keys evenly across buckets
+ *
+ * Simple integer hash : hash(key) = key % arraySize
+ *
+ * Java String hash:
+ *   hash = s[0]*31^(n-1) + s[1]*31^(n-2) + ... + s[n-1]
+ *   31 is prime → reduces collisions, good distribution
+ *
+ * ─────────────────────────────────────────
+ * 4. COLLISION — THE INEVITABLE PROBLEM
+ * ─────────────────────────────────────────
+ * Two different keys landing on the same bucket index = COLLISION.
+ *
+ *   hash("murali") = 2,498,345 → 2,498,345 & 15 = 3  ← index 3
+ *   hash("kumar")  = 7,103,891 → 7,103,891 & 15 = 3  ← index 3
+ *
+ * NOTE: Raw hashCode() values can be completely different.
+ * Collision happens at INDEX level after (hash & capacity-1),
+ * NOT necessarily at the hashCode() level.
+ *
+ * Two solutions:
+ *
+ * SOLUTION 1 — CHAINING (what Java HashMap uses):
+ *   Each bucket holds a linked list.
+ *   Multiple keys at same index append to the chain.
+ *
+ *   bucket[3] → [key="murali", val=42] → [key="kumar", val=99] → null
+ *
+ *   Lookup: go to bucket → walk chain → compare keys with equals()
+ *   Usually O(1), degrades to O(n) if all keys collide (pre Java 8)
+ *
+ * SOLUTION 2 — OPEN ADDRESSING:
+ *   If bucket taken, probe next index.
+ *   Linear probing: try index+1, index+2, etc.
+ *   Not used in Java HashMap.
+ *
+ * ─────────────────────────────────────────
+ * 5. THE TWO-STEP LOOKUP CONTRACT
+ * ─────────────────────────────────────────
+ *   hashCode() → which bucket to go to    (array index)
+ *   equals()   → which node within bucket (key identity)
+ *
+ * This is why hashCode() + equals() contract is critical in Java:
+ *
+ *   If a.equals(b) → a.hashCode() == b.hashCode() MUST be true
+ *   → otherwise get() looks in wrong bucket → returns null ❌
+ *
+ *   Same hashCode does NOT mean equal — that is just a collision.
+ *   hashCode() narrows the search. equals() confirms the match.
+ *
+ * ─────────────────────────────────────────
+ * 6. HASHMAP INTERNAL STRUCTURE
+ * ─────────────────────────────────────────
+ * Internally HashMap is an array of Node objects:
+ *
+ *   Node[] table  ← the bucket array
+ *   Default initial capacity = 16 (always power of 2)
+ *
+ * Each Node:
+ *   static class Node<K, V> {
+ *       final int hash;    // cached hash of key
+ *       final K key;
+ *       V value;
+ *       Node<K,V> next;    // next node in chain → linked list
+ *   }
+ *
+ * Visual:
+ *   index:  0     1     2     3              4     ...  15
+ *          null  null  null  [murali,42]->  null  ...  null
+ *                            [kumar, 99]->
+ *                            null
+ *
+ * ─────────────────────────────────────────
+ * 7. HOW put() WORKS — STEP BY STEP
+ * ─────────────────────────────────────────
+ * put("murali", 42):
+ *
+ * Step 1 — Compute spread hash (NOT raw hashCode):
+ *   static final int hash(Object key) {
+ *       int h = key.hashCode();
+ *       return h ^ (h >>> 16);  // XOR upper 16 bits into lower 16
+ *   }
+ *   WHY: Raw hashCode() has poor distribution in lower bits.
+ *        XOR improves spread → fewer collisions.
+ *
+ * Step 2 — Find bucket index:
+ *   index = hash & (capacity - 1)
+ *   WHY & instead of %: capacity always power of 2 →
+ *   bitwise AND is equivalent to mod but faster.
+ *
+ * Step 3 — Place node:
+ *   bucket[index] == null → place new Node directly
+ *   bucket[index] != null → collision:
+ *       walk chain, check if key exists:
+ *           key found → update value
+ *           key not found → append new Node to chain
+ *
+ * Step 4 — Check treeify:
+ *   chain length > 8 AND capacity >= 64
+ *       → convert bucket's linked list to Red-Black Tree
+ *
+ * Step 5 — Check resize:
+ *   size > capacity × loadFactor (0.75)
+ *       → rehash: new array 2× size, recompute all entries
+ *
+ * Full put() flow:
+ *   put(key, value)
+ *         │
+ *         ▼
+ *   compute hash(key)
+ *         │
+ *         ▼
+ *   index = hash & (capacity - 1)
+ *         │
+ *         ▼
+ *   bucket[index] == null?
+ *      YES → place new Node
+ *      NO  → collision
+ *              │
+ *              ▼
+ *           key exists in chain?
+ *              YES → update value
+ *              NO  → append Node
+ *                       │
+ *                       ▼
+ *                  chain > 8 AND capacity >= 64?
+ *                       YES → treeify bucket
+ *              │
+ *              ▼
+ *           size > capacity × 0.75?
+ *              YES → rehash (double capacity)
+ *
+ * ─────────────────────────────────────────
+ * 8. LOAD FACTOR AND REHASHING
+ * ─────────────────────────────────────────
+ * loadFactor = number of entries / capacity
+ * Default threshold = 0.75
+ *
+ * When entries exceed 0.75 × capacity:
+ *   → chains get long → O(1) degrades
+ *   → rehash triggered:
+ *       1. New array of 2 × old capacity
+ *       2. Recompute hash for every existing entry
+ *       3. Place into new buckets
+ *
+ *   capacity:  16 → 32 → 64 → 128 ...
+ *   threshold: 12 → 24 → 48 → 96  ...
+ *
+ * Rehash is O(n) — but amortized over many puts = O(1) average per put.
+ *
+ * ─────────────────────────────────────────
+ * 9. JAVA 8 IMPROVEMENT — TREEIFICATION
+ * ─────────────────────────────────────────
+ * Before Java 8: bucket chains always linked lists
+ *   Worst case: all keys → same bucket → O(n) lookup
+ *
+ * Java 8 fix — treeify threshold:
+ *   Chain length > 8 AND capacity >= 64
+ *       → convert linked list to Red-Black Tree
+ *       → O(log n) worst case instead of O(n)
+ *
+ *   Untreeify threshold = 6
+ *       → nodes drop below 6 after removes → back to linked list
+ *
+ * ┌─────────────────┬──────────────┬──────────────┐
+ * │ Scenario        │ Before Java8 │ After Java 8 │
+ * ├─────────────────┼──────────────┼──────────────┤
+ * │ Normal case     │ O(1)         │ O(1)         │
+ * │ Heavy collision │ O(n)         │ O(log n)     │
+ * └─────────────────┴──────────────┴──────────────┘
+ *
+ * ─────────────────────────────────────────
+ * 10. HASHSET INTERNALS
+ * ─────────────────────────────────────────
+ * HashSet is literally just a HashMap internally:
+ *
+ *   public class HashSet<E> {
+ *       private transient HashMap<E, Object> map;
+ *       private static final Object PRESENT = new Object(); // dummy
+ *
+ *       public boolean add(E e) {
+ *           return map.put(e, PRESENT) == null;
+ *       }
+ *       public boolean contains(Object o) {
+ *           return map.containsKey(o);
+ *       }
+ *   }
+ *
+ * Every element added = key in internal HashMap with dummy PRESENT value.
+ * HashSet = HashMap with throwaway values.
+ * Same buckets, same hashing, same collision handling, same treeify.
+ *
+ * ─────────────────────────────────────────
+ * 11. KEY NUMBERS — MEMORIZE FOR INTERVIEWS
+ * ─────────────────────────────────────────
+ * ┌──────────────────────────┬────────┬──────────────────────────────┐
+ * │ Property                 │ Value  │ Why                          │
+ * ├──────────────────────────┼────────┼──────────────────────────────┤
+ * │ Default initial capacity │ 16     │ Power of 2 → fast bitwise &  │
+ * │ Default load factor      │ 0.75   │ Balances space vs collision  │
+ * │ Treeify threshold        │ 8      │ Chain → Red-Black Tree       │
+ * │ Untreeify threshold      │ 6      │ Tree → back to linked list   │
+ * │ Resize trigger           │ n×0.75 │ Rehash into 2× array         │
+ * │ Resize factor            │ 2×     │ Keeps capacity power of 2    │
+ * └──────────────────────────┴────────┴──────────────────────────────┘
+ *
+ * ─────────────────────────────────────────
+ * 12. FOUR FUNDAMENTAL HASHING PATTERNS
+ * ─────────────────────────────────────────
+ * Every hashing DSA problem maps to one of these:
+ *
+ * PATTERN 1 — EXISTENCE CHECK
+ *   "Have we seen this element before?"
+ *   Tool: HashSet
+ *   Example: Contains Duplicate
+ *   Set<Integer> seen = new HashSet<>();
+ *   if (!seen.add(num)) → duplicate found
+ *
+ * PATTERN 2 — FREQUENCY MAP
+ *   "How many times does each element appear?"
+ *   Tool: HashMap<Element, Count>
+ *   Example: Valid Anagram, Ransom Note, Top K Frequent
+ *   freq.put(c, freq.getOrDefault(c, 0) + 1);
+ *
+ * PATTERN 3 — VALUE MAPPING / COMPLEMENT LOOKUP
+ *   "Given X, find the Y that pairs with it"
+ *   Tool: HashMap<Key, Value>
+ *   Example: Two Sum
+ *   map.put(nums[i], i);
+ *   map.get(target - nums[i]);
+ *
+ * PATTERN 4 — PREFIX SUM + HASHMAP
+ *   "How many subarrays satisfy condition X?"
+ *   Tool: HashMap<prefixSum, count/index>
+ *   Example: Subarray Sum Equals K
+ *   prefixCount.put(0, 1); // empty subarray base case
+ *
+ * ─────────────────────────────────────────
+ * 13. SPACE-TIME TRADEOFF SUMMARY
+ * ─────────────────────────────────────────
+ *   No hashing:   O(1) space,  O(n) or O(log n) time per lookup
+ *   With hashing: O(n) space,  O(1) average    time per lookup
+ *
+ * You always pay with memory to buy speed. That is the deal.
+ */
