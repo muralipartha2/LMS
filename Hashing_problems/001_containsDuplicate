@@ -1,0 +1,131 @@
+/*
+ * LC 217 — Contains Duplicate
+ *
+ * PROBLEM:
+ * Given an integer array nums, return true if any value appears
+ * at least twice, false if every element is distinct.
+ *
+ * CONSTRAINTS:
+ * - 1 <= nums.length <= 10^5
+ * - -10^9 <= nums[i] <= 10^9
+ * - Negatives possible → boolean array indexing won't work
+ * - Length up to 100k → O(n²) is 10^10 ops → too slow
+ *
+ * ALL APPROACHES:
+ * ┌──────────────┬─────────────────────────┬──────────┬──────┐
+ * │ Approach     │ Idea                    │ TC       │ SC   │
+ * ├──────────────┼─────────────────────────┼──────────┼──────┤
+ * │ Brute Force  │ Compare every pair      │ O(n²)    │ O(1) │
+ * │ Sorting      │ Sort → check adjacent   │ O(nlogn) │ O(1) │
+ * │ HashSet      │ Existence check         │ O(n)     │ O(n) │
+ * └──────────────┴─────────────────────────┴──────────┴──────┘
+ *
+ * ─────────────────────────────────────────
+ * APPROACH 1 — BRUTE FORCE
+ * ─────────────────────────────────────────
+ * WHY: Simplest possible — compare every element with every other.
+ * HOW: Two nested loops. For each i, scan all j > i.
+ *      If nums[i] == nums[j] → duplicate found.
+ *
+ * REJECTED BECAUSE:
+ * O(n²) — for n=10^5 that's 10^10 comparisons. TLE.
+ *
+ * TC: O(n²) — n*(n-1)/2 comparisons worst case
+ * SC: O(1)  — no extra space
+ *
+ * Best case:  O(1) — duplicate at index 0,1
+ * Worst case: O(n²) — no duplicate or duplicate at end
+ */
+public boolean containsDuplicateBrute(int[] nums) {
+    for (int i = 0; i < nums.length; i++) {
+        for (int j = i + 1; j < nums.length; j++) {
+            // compare every pair — if equal, duplicate found
+            if (nums[i] == nums[j]) return true;
+        }
+    }
+    return false;
+}
+
+/*
+ * ─────────────────────────────────────────
+ * APPROACH 2 — SORTING (Intermediate)
+ * ─────────────────────────────────────────
+ * WHY: Key insight — if duplicates exist, after sorting they
+ *      MUST be adjacent. No need to compare all pairs.
+ * HOW: Sort array → single pass checking nums[i] == nums[i+1].
+ *
+ * KEY OBSERVATION:
+ * [1, 3, 1, 2] → sort → [1, 1, 2, 3]
+ *                              ↑↑ adjacent duplicate visible
+ *
+ * TRADEOFF vs Optimal:
+ * - Better than brute: O(n log n) vs O(n²)
+ * - Worse than HashSet: O(n log n) vs O(n)
+ * - MUTATES input array — Arrays.sort() is in-place
+ *   If original order must be preserved, need to clone first → O(n) SC
+ * - No early exit during sort phase
+ *
+ * TC: O(n log n) — dominated by sort; single pass is O(n)
+ * SC: O(1)       — in-place sort (ignoring call stack)
+ *                  O(n) if input must be preserved (clone needed)
+ *
+ * Best case:  O(n log n) — no early exit during sort
+ * Worst case: O(n log n) — same
+ */
+public boolean containsDuplicateSorting(int[] nums) {
+    // sort so duplicates become adjacent
+    Arrays.sort(nums);
+    // single pass — only need to check neighbors
+    for (int i = 0; i < nums.length - 1; i++) {
+        // after sorting, any duplicate must be at i and i+1
+        if (nums[i] == nums[i + 1]) return true;
+    }
+    return false;
+}
+
+/*
+ * ─────────────────────────────────────────
+ * APPROACH 3 — HASHSET (Optimal)
+ * ─────────────────────────────────────────
+ * WHY HashSet:
+ * We need O(1) existence check — "have we seen this number before?"
+ * HashSet gives O(1) average contains() and add() via hashing.
+ * No mutation of input. No nested loops.
+ *
+ * HOW:
+ * Single pass. For each number:
+ *   - Already in set? → duplicate → return true immediately
+ *   - Not in set?     → add and continue
+ * Loop completes without hit → no duplicates → return false
+ *
+ * MISCONCEPTION CLEARED:
+ * contains() and add() both compute hash → find bucket → walk chain.
+ * contains() stops there. add() additionally inserts if not found.
+ * Both are O(1) average. contains() slightly cheaper in found-case.
+ * No meaningful TC difference between them at Big-O level.
+ *
+ * WHY NOT boolean array:
+ * nums[i] range is -10^9 to 10^9 — can't use as array index directly.
+ * Would need offset of 10^9 → array of size 2*10^9 → memory explosion.
+ *
+ * TC: O(n)  — single pass, O(1) per contains/add
+ * SC: O(n)  — worst case all n elements in set before duplicate found
+ *
+ * Best case:  O(1) — duplicate at index 0 and 1
+ * Worst case: O(n) — duplicate at last two positions or no duplicate
+ *
+ * Edge cases:
+ * - Single element → loop runs once → returns false ✅
+ * - All same elements → returns true on index 1 ✅
+ * - Negatives handled — HashSet works with any Integer value ✅
+ */
+public boolean containsDuplicate(int[] nums) {
+    Set<Integer> set = new HashSet<>();
+    for (int num : nums) {
+        // O(1) check — hash finds bucket, equals() finds key in chain
+        if (set.contains(num)) return true;
+        // O(1) insert — only reached if num not seen before
+        set.add(num);
+    }
+    return false;
+}
