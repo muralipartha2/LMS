@@ -1,0 +1,138 @@
+/*
+ * LC 290 — Word Pattern
+ *
+ * PROBLEM:
+ * Given a pattern string and string s, return true if s follows
+ * the same pattern. Full bijection between pattern letter and word.
+ *
+ * CONSTRAINTS:
+ * - All lowercase letters
+ * - Early exit: split s by space → if word count != pattern.length() → false
+ *   pattern="abba", s="dog cat cat" → 4 != 3 → false immediately
+ * - Same bidirectional mapping concept as LC 205
+ *   but char → word instead of char → char
+ *
+ * SIMILARITY TO LC 205 — ISOMORPHIC STRINGS:
+ * LC 205: char → char mapping, bidirectional
+ * LC 290: char → word mapping, bidirectional
+ * Same two-map pattern, same check-before-put logic.
+ * Only difference — split string into words first.
+ *
+ * STRING COMPARISON — IMPORTANT:
+ * Always use .equals() for String/Character object comparison.
+ * != compares object references, not values.
+ * Character cache makes != work for ASCII in practice,
+ * but .equals() is correct by contract — always use it.
+ *
+ * ALL APPROACHES:
+ * ┌─────────────────┬──────────────────────────────────┬──────┬──────┐
+ * │ Approach        │ Idea                             │ TC   │ SC   │
+ * ├─────────────────┼──────────────────────────────────┼──────┼──────┤
+ * │ Brute Force     │ For each pair (i,j), verify      │O(n²) │ O(1) │
+ * │                 │ pattern consistency              │      │      │
+ * │ Two HashMaps    │ Bidirectional char→word mapping  │ O(n) │ O(n) │
+ * └─────────────────┴──────────────────────────────────┴──────┴──────┘
+ *
+ * ─────────────────────────────────────────
+ * APPROACH 1 — BRUTE FORCE
+ * ─────────────────────────────────────────
+ * WHY: For every pair (i,j), verify structural consistency.
+ * Same char in pattern → must have same word in s.
+ * Different chars in pattern → must have different words in s.
+ *
+ * TC: O(n²×w) — n² pairs, each word comparison costs O(w)
+ *     where w = average word length
+ * SC: O(n×w)  — words array storage
+ * REJECTED: O(n²) too slow
+ */
+public boolean wordPatternBrute(String pattern, String s) {
+    String[] words = s.split(" ");
+    if (pattern.length() != words.length) return false;
+    for (int i = 0; i < pattern.length(); i++) {
+        for (int j = i + 1; j < pattern.length(); j++) {
+            // same char in pattern must map to same word
+            if (pattern.charAt(i) == pattern.charAt(j)
+                    && !words[i].equals(words[j]))
+                return false;
+            // different chars in pattern must map to different words
+            if (pattern.charAt(i) != pattern.charAt(j)
+                    && words[i].equals(words[j]))
+                return false;
+        }
+    }
+    return true;
+}
+
+/*
+ * ─────────────────────────────────────────
+ * APPROACH 2 — TWO HASHMAPS (Optimal)
+ * ─────────────────────────────────────────
+ * WHY two maps:
+ * map1 (char→word): ensures each pattern char maps to exactly one word
+ * map2 (word→char): ensures each word maps to exactly one pattern char
+ * Single map misses case where two pattern chars map to same word.
+ * Example: pattern="abba", s="dog dog dog dog"
+ *   map1 only: a→dog, b→dog → no conflict detected → true ❌
+ *   map2 catches: 'dog' already claimed by 'a', 'b' tries to claim it → false ✅
+ *
+ * HOW — CHECK BEFORE PUT:
+ * Split s into words array first.
+ * At each index i:
+ * 1. pat = pattern.charAt(i), word = words[i]
+ * 2. map1 check: pat seen before AND mapped to different word → false
+ * 3. map2 check: word seen before AND mapped to different char → false
+ * 4. Store both mappings safely
+ *
+ * Dry run — pattern="abba", s="dog cat cat dog":
+ * i=0: pat='a', word="dog"
+ *      map1: 'a' not seen → ok
+ *      map2: "dog" not seen → ok
+ *      store: map1{a→dog}, map2{dog→a}
+ * i=1: pat='b', word="cat"
+ *      map1: 'b' not seen → ok
+ *      map2: "cat" not seen → ok
+ *      store: map1{a→dog,b→cat}, map2{dog→a,cat→b}
+ * i=2: pat='b', word="cat"
+ *      map1: 'b' seen, map1.get('b')="cat" == word="cat" ✅
+ *      map2: "cat" seen, map2.get("cat")='b' == pat='b' ✅
+ * i=3: pat='a', word="dog"
+ *      map1: 'a' seen, map1.get('a')="dog" == word="dog" ✅
+ *      map2: "dog" seen, map2.get("dog")='a' == pat='a' ✅
+ * return true ✅
+ *
+ * Dry run — pattern="abba", s="dog dog dog dog":
+ * i=0: store map1{a→dog}, map2{dog→a}
+ * i=1: pat='b', word="dog"
+ *      map2: "dog" seen! map2.get("dog")='a' != pat='b' → false ✅
+ *
+ * TC: O(n×w) — n iterations, each word comparison/storage costs O(w)
+ *     where w = average word length
+ * SC: O(n×w) — two maps storing n words of average length w
+ *
+ * Edge cases:
+ * - pattern.length() != words.length → caught early ✅
+ * - pattern="aaaa", s="dog cat cat dog"
+ *   i=1: map1.get('a')="dog" != "cat" → false ✅
+ * - Single char pattern, single word → trivially true ✅
+ */
+public boolean wordPattern(String pattern, String s) {
+    String[] words = s.split(" ");
+    // early exit — word count must match pattern length
+    if (pattern.length() != words.length) return false;
+    Map<Character, String> map1 = new HashMap<>(); // char → word
+    Map<String, Character> map2 = new HashMap<>(); // word → char
+    for (int i = 0; i < pattern.length(); i++) {
+        char pat = pattern.charAt(i);
+        String word = words[i];
+        // check char→word consistency
+        if (map1.containsKey(pat) && !map1.get(pat).equals(word))
+            return false;
+        // check word→char consistency
+        if (map2.containsKey(word) && !map2.get(word).equals(pat))
+            return false;
+        // safe to store
+        map1.put(pat, word);
+        map2.put(word, pat);
+    }
+    return true;
+}
