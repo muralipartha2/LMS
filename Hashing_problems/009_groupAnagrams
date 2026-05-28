@@ -1,0 +1,170 @@
+/*
+ * LC 49 — Group Anagrams
+ *
+ * PROBLEM:
+ * Given array of strings, group anagrams together.
+ * Return list of groups in any order.
+ *
+ * CONSTRAINTS:
+ * - 1 <= strs.length <= 10^4
+ * - 0 <= strs[i].length <= 100
+ * - strs[i] consists of lowercase English letters
+ * - Empty string is valid input — freq array all zeros → own group
+ *
+ * CORE INSIGHT:
+ * All anagrams share the same character frequencies.
+ * Need a KEY that uniquely identifies a group of anagrams.
+ * Two candidate keys:
+ *   1. Sorted word    → "eat","tea","ate" all sort to "aet"
+ *   2. int[26] array  → all produce same freq array → convert to String key
+ *
+ * ALL APPROACHES:
+ * ┌─────────────────┬────────────────────────────────┬────────────┬────────┐
+ * │ Approach        │ Idea                           │ TC         │ SC     │
+ * ├─────────────────┼────────────────────────────────┼────────────┼────────┤
+ * │ Brute Force     │ Compare every pair,            │ O(n²×k)    │ O(n)   │
+ * │                 │ check if anagram               │            │        │
+ * │ Sorted key      │ Sort each word → use as key    │ O(n×k logk)│ O(n×k) │
+ * │ int[26] key     │ Freq array → String key        │ O(n×k)     │ O(n×k) │
+ * └─────────────────┴────────────────────────────────┴────────────┴────────┘
+ *
+ * WHERE:
+ * n = number of words
+ * k = average word length
+ *
+ * ─────────────────────────────────────────
+ * APPROACH 1 — BRUTE FORCE
+ * ─────────────────────────────────────────
+ * WHY: Simplest — compare every pair, group if anagram.
+ * HOW: For each word, check against all other words.
+ *      Use boolean[] visited to avoid duplicate grouping.
+ *      Two words are anagrams if sorted forms are equal.
+ *
+ * TC: O(n²×k) — n² pairs, each anagram check costs O(k log k)
+ * SC: O(n×k)  — result list storage
+ * REJECTED: O(n²) too slow for n=10^4
+ */
+public List<List<String>> groupAnagramsBrute(String[] strs) {
+    boolean[] visited = new boolean[strs.length];
+    List<List<String>> result = new ArrayList<>();
+    for (int i = 0; i < strs.length; i++) {
+        if (visited[i]) continue;
+        List<String> group = new ArrayList<>();
+        group.add(strs[i]);
+        visited[i] = true;
+        // compare with all remaining words
+        for (int j = i + 1; j < strs.length; j++) {
+            if (!visited[j] && isAnagram(strs[i], strs[j])) {
+                group.add(strs[j]);
+                visited[j] = true;
+            }
+        }
+        result.add(group);
+    }
+    return result;
+}
+// helper — check if two words are anagrams via sorting
+private boolean isAnagram(String a, String b) {
+    if (a.length() != b.length()) return false;
+    char[] ca = a.toCharArray();
+    char[] cb = b.toCharArray();
+    Arrays.sort(ca);
+    Arrays.sort(cb);
+    return Arrays.equals(ca, cb);
+}
+
+/*
+ * ─────────────────────────────────────────
+ * APPROACH 2 — SORTED KEY (Intermediate)
+ * ─────────────────────────────────────────
+ * WHY: All anagrams produce identical sorted string.
+ * Use sorted word as HashMap key → anagrams naturally group together.
+ *
+ * HOW:
+ * For each word → sort it → use as key
+ * map: sortedWord → List of original words
+ *
+ * Example:
+ * "eat" → "aet" → group["eat"]
+ * "tea" → "aet" → group["eat","tea"]
+ * "tan" → "ant" → group["tan"]
+ *
+ * TRADEOFF vs int[26]:
+ * Simpler to implement but O(k log k) per word for sorting.
+ * int[26] approach is O(k) per word — strictly better.
+ *
+ * TC: O(n×k log k) — sorting each word dominates
+ * SC: O(n×k)       — storing all words in map
+ */
+public List<List<String>> groupAnagramsSorted(String[] strs) {
+    Map<String, List<String>> map = new HashMap<>();
+    for (String word : strs) {
+        // sort word to get canonical anagram key
+        char[] chars = word.toCharArray();
+        Arrays.sort(chars);
+        String key = new String(chars);
+        map.putIfAbsent(key, new ArrayList<>());
+        map.get(key).add(word);
+    }
+    return new ArrayList<>(map.values());
+}
+
+/*
+ * ─────────────────────────────────────────
+ * APPROACH 3 — int[26] FREQUENCY KEY (Optimal)
+ * ─────────────────────────────────────────
+ * WHY int[26] key beats sorted key:
+ * Sorting costs O(k log k) per word.
+ * Building freq array costs O(k) per word — single pass.
+ * Converting int[26] to String costs O(26) = O(1) — fixed size.
+ * Overall O(n×k) vs O(n×k log k).
+ *
+ * KEY GENERATION:
+ * Arrays.toString(freq) → "[1,0,0,0,1,0,...,1,0,0]"
+ * All anagrams produce identical freq arrays → identical keys.
+ *
+ * CRITICAL — RESET freq INSIDE LOOP:
+ * Must declare int[] freq = new int[26] INSIDE outer loop.
+ * If declared outside → frequencies accumulate across words → wrong keys!
+ * Example: "eat" updates freq, "tea" adds on top → wrong!
+ *
+ * putIfAbsent PATTERN:
+ * map.putIfAbsent(key, new ArrayList<>()) — creates list if key absent
+ * map.get(key).add(word)                  — appends to existing list
+ * Cannot do map.put(key, map.get(key).add(word)):
+ *   1. map.get(key) returns null if absent → NullPointerException
+ *   2. List.add() returns boolean, not List → type mismatch
+ *
+ * Dry run — ["eat","tea","tan","ate","nat","bat"]:
+ * "eat" → freq[e,a,t]=1 → key="[1,0,0,0,1,0,...,1,0,0]" → {key→["eat"]}
+ * "tea" → same freq     → key same → {key→["eat","tea"]}
+ * "tan" → freq[t,a,n]=1 → new key  → {key2→["tan"]}
+ * "ate" → same as "eat" → {key→["eat","tea","ate"]}
+ * "nat" → same as "tan" → {key2→["tan","nat"]}
+ * "bat" → freq[b,a,t]=1 → new key  → {key3→["bat"]}
+ * return [["eat","tea","ate"],["tan","nat"],["bat"]] ✅
+ *
+ * TC: O(n×k)  — n words, O(k) to build freq + O(1) for key conversion
+ * SC: O(n×k)  — map stores all n words, keys of fixed size O(1) each
+ *
+ * Edge cases:
+ * - Empty string "" → freq all zeros → "[0,0,...,0]" → own group ✅
+ * - Single char strings → each gets own freq key ✅
+ * - All same word → all map to same key → one group ✅
+ */
+public List<List<String>> groupAnagrams(String[] strs) {
+    Map<String, List<String>> map = new HashMap<>();
+    for (String incoming : strs) {
+        // reset freq for every word — MUST be inside loop
+        int[] freq = new int[26];
+        for (char c : incoming.toCharArray()) {
+            freq[c - 'a']++;
+        }
+        // convert freq array to String key — O(26)=O(1)
+        String key = Arrays.toString(freq);
+        // create list if key absent, then append word
+        map.putIfAbsent(key, new ArrayList<>());
+        map.get(key).add(incoming);
+    }
+    return new ArrayList<>(map.values());
+}
