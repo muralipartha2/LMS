@@ -1,0 +1,174 @@
+/*
+ * LC 347 — Top K Frequent Elements
+ *
+ * PROBLEM:
+ * Given integer array nums and integer k, return k most frequent elements.
+ * Answer can be in any order.
+ *
+ * CONSTRAINTS:
+ * - 1 <= nums.length <= 10^5
+ * - -10^4 <= nums[i] <= 10^4
+ * - k is always valid — 1 <= k <= unique element count
+ * - Follow-up: solve in better than O(n log n)
+ *
+ * CORE INSIGHT:
+ * Step 1 always same — build freq map: num → count
+ * Step 2 differs — how to extract top k efficiently
+ *
+ * ALL APPROACHES:
+ * ┌──────────────┬────────────────────────────────────┬───────────┬──────┐
+ * │ Approach     │ Idea                               │ TC        │ SC   │
+ * ├──────────────┼────────────────────────────────────┼───────────┼──────┤
+ * │ Brute Force  │ Build freq map, sort by count desc │ O(n log n)│ O(n) │
+ * │ Min Heap     │ Maintain heap of size k            │ O(n log k)│ O(n) │
+ * │ Bucket Sort  │ Freq as index, scan right to left  │ O(n)      │ O(n) │
+ * └──────────────┴────────────────────────────────────┴───────────┴──────┘
+ *
+ * ─────────────────────────────────────────
+ * APPROACH 1 — BRUTE FORCE (Sort by frequency)
+ * ─────────────────────────────────────────
+ * WHY: Simplest — build freq map, sort entries by count descending.
+ * HOW: Build freq map → sort entrySet by value descending → take first k.
+ *
+ * TC: O(n log n) — sorting dominates
+ * SC: O(n)       — freq map + sorted list
+ * REJECTED: Follow-up explicitly asks to beat O(n log n)
+ */
+public int[] topKFrequentBrute(int[] nums, int k) {
+    Map<Integer, Integer> freq = new HashMap<>();
+    for (int num : nums)
+        freq.put(num, freq.getOrDefault(num, 0) + 1);
+    // sort entries by frequency descending
+    List<Map.Entry<Integer, Integer>> entries = new ArrayList<>(freq.entrySet());
+    entries.sort((a, b) -> b.getValue() - a.getValue());
+    int[] result = new int[k];
+    for (int i = 0; i < k; i++)
+        result[i] = entries.get(i).getKey();
+    return result;
+}
+
+/*
+ * ─────────────────────────────────────────
+ * APPROACH 2 — MIN HEAP (Intermediate)
+ * ─────────────────────────────────────────
+ * WHY Min Heap not Max Heap:
+ * Max heap would require popping all n elements to get k → O(n log n)
+ * Min heap of size k — keeps only k largest seen so far.
+ * When heap exceeds size k, poll() removes smallest → only top k remain.
+ *
+ * HOW:
+ * Build freq map → push all entries into min heap ordered by frequency
+ * If heap size > k → poll() removes lowest frequency entry
+ * At end heap contains exactly k most frequent elements
+ *
+ * TC: O(n log k) — n insertions each costing O(log k)
+ * SC: O(n)       — freq map O(n) + heap O(k)
+ *
+ * WHY better than sort:
+ * Sort → O(n log n) — sorts ALL elements
+ * Min heap → O(n log k) — only maintains k elements, k <= n
+ */
+public int[] topKFrequentHeap(int[] nums, int k) {
+    Map<Integer, Integer> freq = new HashMap<>();
+    for (int num : nums)
+        freq.put(num, freq.getOrDefault(num, 0) + 1);
+    // min heap — ordered by frequency ascending
+    Queue<Map.Entry<Integer, Integer>> pq = new PriorityQueue<>(
+        Comparator.comparingInt(Map.Entry::getValue)
+    );
+    for (Map.Entry<Integer, Integer> entry : freq.entrySet()) {
+        pq.offer(entry);
+        // maintain heap size k — remove lowest frequency
+        if (pq.size() > k) pq.poll();
+    }
+    int[] result = new int[k];
+    int i = 0;
+    while (!pq.isEmpty())
+        result[i++] = pq.poll().getKey();
+    return result;
+}
+
+/*
+ * ─────────────────────────────────────────
+ * APPROACH 3 — BUCKET SORT (Optimal)
+ * ─────────────────────────────────────────
+ * WHY BUCKET SORT:
+ * Key insight — max possible frequency of any element = n (all same).
+ * Frequencies range from 1 to n → create bucket array of size n+1.
+ * bucket[i] = list of numbers appearing exactly i times.
+ * Scan right to left → naturally gets highest frequency first → O(n)!
+ *
+ * WHY n+1 size:
+ * Index 0 unused (frequency 0 meaningless).
+ * Index n = element appearing n times (entire array same element).
+ * Valid indices 1 to n → size n+1 covers all cases.
+ *
+ * WHY List[] not int[]:
+ * Multiple elements can have same frequency → same bucket.
+ * Example: [1,1,2,2,3] → freq{1→2, 2→2, 3→1}
+ * bucket[2] = [1,2] ← both in same bucket!
+ *
+ * CRITICAL — iterate freq.entrySet() NOT nums to fill buckets:
+ * Iterating nums causes duplicates in buckets:
+ *   nums=[1,1,1,2,2,3] → bucket[3] gets 1 added THREE times!
+ *   Result picks same element multiple times → wrong output.
+ * entrySet() has one entry per unique number → no duplicates.
+ *
+ * DOUBLE BREAK PATTERN:
+ * Inner break stops inner loop when k reached.
+ * Outer loop condition `untilK < k` stops outer loop.
+ * Both needed — inner break alone lets outer loop continue
+ * → untilK exceeds k → ArrayIndexOutOfBoundsException!
+ *
+ * Dry run — nums=[1,1,1,2,2,3], k=2:
+ * freq: {1→3, 2→2, 3→1}
+ * bucket[1]=[3], bucket[2]=[2], bucket[3]=[1]
+ * scan right to left:
+ *   i=6,5,4: null → skip
+ *   i=3: bucket[3]=[1] → result[0]=1, untilK=1
+ *   i=2: bucket[2]=[2] → result[1]=2, untilK=2==k → break
+ * return [1,2] ✅
+ *
+ * Same frequency edge case — nums=[1,1,2,2,3], k=2:
+ * freq: {1→2, 2→2, 3→1}
+ * bucket[2]=[1,2], bucket[1]=[3]
+ * i=2: num=1 → result[0]=1, untilK=1
+ *      num=2 → result[1]=2, untilK=2==k → break
+ * return [1,2] ✅
+ *
+ * TC: O(n) — freq map O(n) + bucket fill O(n) + scan O(n)
+ * SC: O(n) — freq map + bucket array both O(n)
+ *
+ * Edge cases:
+ * - k=1 → stops after first element collected ✅
+ * - All same element → bucket[n]=[num] → picked first ✅
+ * - All unique → bucket[1]=[all nums] → first k picked ✅
+ */
+public int[] topKFrequent(int[] nums, int k) {
+    Map<Integer, Integer> freq = new HashMap<>();
+    for (int num : nums)
+        freq.put(num, freq.getOrDefault(num, 0) + 1);
+    // bucket array — index = frequency, value = list of nums with that freq
+    List<Integer>[] bucket = new List[nums.length + 1];
+    for (Map.Entry<Integer, Integer> entry : freq.entrySet()) {
+        int count = entry.getValue();
+        int num = entry.getKey();
+        // lazy init — only create list when needed
+        if (bucket[count] == null)
+            bucket[count] = new ArrayList<>();
+        bucket[count].add(num);
+    }
+    int untilK = 0;
+    int[] result = new int[k];
+    // scan right to left — highest frequency first
+    for (int i = bucket.length - 1; i >= 1 && untilK < k; i--) {
+        if (bucket[i] == null) continue;
+        for (int num : bucket[i]) {
+            result[untilK++] = num;
+            // inner break — stop collecting when k reached
+            if (untilK == k) break;
+        }
+        // outer condition untilK < k handles stopping outer loop
+    }
+    return result;
+}
