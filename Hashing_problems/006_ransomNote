@@ -1,0 +1,152 @@
+/*
+ * LC 383 — Ransom Note
+ *
+ * PROBLEM:
+ * Given strings ransomNote and magazine, return true if ransomNote
+ * can be constructed using letters from magazine.
+ * Each letter in magazine can only be used once.
+ *
+ * CONSTRAINTS:
+ * - Only lowercase English letters → int[26] sufficient
+ * - if ransomNote.length() > magazine.length() → impossible → return false
+ *   Reverse not true — magazine can be longer and still valid
+ *   Example: ransomNote="a", magazine="aab" → true ✅
+ * - Duplicate characters matter — each usage consumes one from magazine
+ *   Example: ransomNote="aa", magazine="ab" → false (only one 'a' available)
+ *
+ * ALL APPROACHES:
+ * ┌─────────────┬───────────────────────────────────────┬────────┬──────┐
+ * │ Approach    │ Idea                                  │ TC     │ SC   │
+ * ├─────────────┼───────────────────────────────────────┼────────┼──────┤
+ * │ Brute Force │ For each char in ransomNote,          │O(m×n)  │ O(n) │
+ * │             │ scan magazine with used[] tracking    │        │      │
+ * │ HashMap     │ Freq map char → count                 │O(m+n)  │ O(1) │
+ * │ int[26]     │ Fixed freq array                      │O(m+n)  │ O(1) │
+ * └─────────────┴───────────────────────────────────────┴────────┴──────┘
+ *
+ * ─────────────────────────────────────────
+ * APPROACH 1 — BRUTE FORCE
+ * ─────────────────────────────────────────
+ * WHY: Simplest — for each char in ransomNote, find it in magazine.
+ *
+ * CRITICAL — WHY used[] IS NEEDED:
+ * Without tracking consumed chars:
+ *   ransomNote="aa", magazine="ab"
+ *   'a' found at index 0 → ✅
+ *   'a' found at index 0 again → ✅ (same char reused!) → returns true ❌
+ * With used[]:
+ *   'a' found at index 0, used[0]=true
+ *   second 'a' → index 0 already used, no other 'a' → false ✅
+ *
+ * TC: O(m×n) — for each of m chars in ransomNote, scan n chars in magazine
+ * SC: O(n)   — boolean used[] of magazine length
+ *
+ * REJECTED: O(m×n) too slow for large inputs
+ */
+public boolean canConstructBrute(String ransomNote, String magazine) {
+    if (ransomNote.length() > magazine.length()) return false;
+    // track which magazine chars are already consumed
+    boolean[] used = new boolean[magazine.length()];
+    for (char r : ransomNote.toCharArray()) {
+        boolean found = false;
+        // scan magazine for unused occurrence of r
+        for (int i = 0; i < magazine.length(); i++) {
+            if (!used[i] && magazine.charAt(i) == r) {
+                used[i] = true; // mark as consumed
+                found = true;
+                break;
+            }
+        }
+        // char not found in magazine → cannot construct
+        if (!found) return false;
+    }
+    return true;
+}
+
+/*
+ * ─────────────────────────────────────────
+ * APPROACH 2 — HASHMAP
+ * ─────────────────────────────────────────
+ * WHY: O(m+n) frequency counting.
+ * HOW: Same as int[26] but uses HashMap<Character, Integer>.
+ *
+ * WHY HashMap over int[26] here:
+ * HashMap generalizes to Unicode — if constraint changes from
+ * lowercase English to any character, HashMap handles it.
+ * int[26] would break for Unicode input.
+ * Use HashMap when character space is unknown or large.
+ *
+ * TC: O(m+n) — one pass each over magazine and ransomNote
+ * SC: O(1)   — at most 26 entries (lowercase only constraint)
+ */
+public boolean canConstructHashMap(String ransomNote, String magazine) {
+    if (ransomNote.length() > magazine.length()) return false;
+    Map<Character, Integer> freq = new HashMap<>();
+    // pass 1 — build frequency from magazine
+    for (char c : magazine.toCharArray()) {
+        freq.put(c, freq.getOrDefault(c, 0) + 1);
+    }
+    // pass 2 — consume from ransomNote
+    for (char c : ransomNote.toCharArray()) {
+        if (!freq.containsKey(c) || freq.get(c) == 0) return false;
+        freq.put(c, freq.get(c) - 1);
+    }
+    return true;
+}
+
+/*
+ * ─────────────────────────────────────────
+ * APPROACH 3 — int[26] FREQUENCY ARRAY (Optimal)
+ * ─────────────────────────────────────────
+ * WHY int[26] beats HashMap:
+ * Only 26 possible chars — fixed key space known upfront.
+ * int[26] → contiguous memory, zero object overhead.
+ * HashMap → boxing overhead, bucket array, Node objects, hashing.
+ * Both O(1) SC (max 26 entries) but int[26] has smaller constant.
+ *
+ * HOW:
+ * Pass 1 — iterate magazine → increment count for each char
+ * Pass 2 — iterate ransomNote → check availability then decrement
+ *           count == 0 → char exhausted in magazine → return false
+ *           count > 0  → char available → decrement and continue
+ *
+ * ONE DIRECTIONAL — unlike Valid Anagram:
+ * Valid Anagram checks both strings have equal frequency.
+ * Here we only check magazine covers ransomNote — not symmetric.
+ * magazine can have extra chars — that is fine.
+ *
+ * TWO VALID DECREMENT STYLES:
+ * Style 1 (this solution) — check == 0 first, then decrement
+ *   if(count == 0) return false;
+ *   count--;
+ * Style 2 (Valid Anagram style) — decrement first, check < 0
+ *   count--;
+ *   if(count < 0) return false;
+ * Both correct — Style 1 slightly more readable.
+ *
+ * TC: O(m+n) — one pass over magazine(n) + one pass over ransomNote(m)
+ * SC: O(1)   — fixed int[26] regardless of input size
+ *
+ * Edge cases:
+ * - ransomNote.length() > magazine.length() → caught early ✅
+ * - ransomNote="aa", magazine="ab" → count['a'-'a']=1
+ *   first 'a': count=1>0 → decrement to 0
+ *   second 'a': count=0 → return false ✅
+ * - Single char strings → handled naturally ✅
+ */
+public boolean canConstruct(String ransomNote, String magazine) {
+    if (ransomNote.length() > magazine.length()) return false;
+    int[] countArray = new int[26];
+    // pass 1 — build frequency from magazine
+    for (char c : magazine.toCharArray()) {
+        countArray[c - 'a']++;
+    }
+    // pass 2 — consume from ransomNote, check availability
+    for (char c : ransomNote.toCharArray()) {
+        // char exhausted in magazine → cannot construct
+        if (countArray[c - 'a'] == 0) return false;
+        // consume one occurrence
+        countArray[c - 'a']--;
+    }
+    return true;
+}
