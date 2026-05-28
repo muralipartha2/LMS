@@ -1,0 +1,135 @@
+/*
+ * LC 205 — Isomorphic Strings
+ *
+ * PROBLEM:
+ * Given two strings s and t, return true if they are isomorphic.
+ * Two strings are isomorphic if characters in s can be replaced
+ * to get t, where each character maps to exactly one character
+ * and no two characters map to the same character.
+ *
+ * CONSTRAINTS:
+ * - Both strings always same length
+ * - Any valid ASCII character → int[26] won't work
+ *   → HashMap<Character, Character> is the right choice
+ * - Mapping must be consistent in BOTH directions
+ *
+ * ISOMORPHIC CONCEPT:
+ * s = "egg",  t = "add" → true  (e→a, g→d consistently)
+ * s = "foo",  t = "bar" → false (o→a then o→r — inconsistent!)
+ * s = "ab",   t = "aa"  → false (a and b both map to a — conflict!)
+ *
+ * TWO CONDITIONS MUST HOLD:
+ * 1. Each char in s maps to exactly one char in t (s→t consistent)
+ * 2. Each char in t maps to exactly one char in s (t→s consistent)
+ * Single map only checks condition 1 — misses condition 2!
+ * Example: s="ab", t="aa" — single map misses b→a conflict
+ * Need BIDIRECTIONAL mapping → two maps
+ *
+ * ALL APPROACHES:
+ * ┌──────────────────┬─────────────────────────────────┬──────┬──────┐
+ * │ Approach         │ Idea                            │ TC   │ SC   │
+ * ├──────────────────┼─────────────────────────────────┼──────┼──────┤
+ * │ Brute Force      │ For each char, scan rest of     │O(n²) │ O(1) │
+ * │                  │ string to verify consistency    │      │      │
+ * │ Two HashMaps     │ Bidirectional char→char mapping │ O(n) │ O(n) │
+ * └──────────────────┴─────────────────────────────────┴──────┴──────┘
+ *
+ * ─────────────────────────────────────────
+ * APPROACH 1 — BRUTE FORCE
+ * ─────────────────────────────────────────
+ * WHY: For each position i, scan all other positions j
+ *      to verify that same char in s always maps to same char in t.
+ *
+ * HOW:
+ * For each pair (i, j):
+ *   if s.charAt(i) == s.charAt(j) → t.charAt(i) must == t.charAt(j)
+ *   if s.charAt(i) != s.charAt(j) → t.charAt(i) must != t.charAt(j)
+ * Both directions checked implicitly by second condition.
+ *
+ * TC: O(n²) — every pair compared
+ * SC: O(1)  — no extra space
+ * REJECTED: O(n²) too slow
+ */
+public boolean isIsomorphicBrute(String s, String t) {
+    for (int i = 0; i < s.length(); i++) {
+        for (int j = i + 1; j < s.length(); j++) {
+            // same char in s must map to same char in t
+            if (s.charAt(i) == s.charAt(j) && t.charAt(i) != t.charAt(j))
+                return false;
+            // different chars in s must map to different chars in t
+            if (s.charAt(i) != s.charAt(j) && t.charAt(i) == t.charAt(j))
+                return false;
+        }
+    }
+    return true;
+}
+
+/*
+ * ─────────────────────────────────────────
+ * APPROACH 2 — TWO HASHMAPS (Optimal)
+ * ─────────────────────────────────────────
+ * WHY two maps:
+ * Single map only enforces s→t consistency.
+ * Misses case where two chars in s map to same char in t.
+ * Example: s="ab", t="aa"
+ *   Single map: a→a, b→a → no conflict detected → returns true ❌
+ *   Two maps:   map2 catches 'a' in t already claimed by 'a' in s
+ *               when 'b' tries to also map to 'a' → false ✅
+ *
+ * WHY HashMap not int[26]:
+ * Any valid ASCII character — not just lowercase English.
+ * int[26] only handles 'a'-'z'. HashMap handles full ASCII range.
+ *
+ * HOW — CHECK BEFORE PUT:
+ * Must check existing mapping BEFORE storing new one.
+ * Putting first overwrites silently — conflict never detected.
+ *
+ * At each index i:
+ * 1. sChar = s.charAt(i), tChar = t.charAt(i)
+ * 2. map1 check: sChar seen before AND mapped to different tChar → false
+ * 3. map2 check: tChar seen before AND mapped to different sChar → false
+ * 4. Store both mappings safely
+ *
+ * Dry run — s="ab", t="aa":
+ * i=0: sChar='a', tChar='a'
+ *      map1: 'a' not seen → ok
+ *      map2: 'a' not seen → ok
+ *      store: map1{a→a}, map2{a→a}
+ * i=1: sChar='b', tChar='a'
+ *      map1: 'b' not seen → ok
+ *      map2: 'a' seen! map2.get('a')='a' != sChar='b' → return false ✅
+ *
+ * Dry run — s="egg", t="add":
+ * i=0: e,a → not seen → store map1{e→a}, map2{a→e}
+ * i=1: g,d → not seen → store map1{e→a,g→d}, map2{a→e,d→g}
+ * i=2: g,d → map1.get(g)=d == tChar=d ✅
+ *            map2.get(d)=g == sChar=g ✅ → continue
+ * return true ✅
+ *
+ * TC: O(n) — single pass, O(1) per containsKey/get/put
+ * SC: O(n) — two maps, at most n entries each
+ *            bounded by unique chars → O(1) for ASCII (128 max entries)
+ *
+ * Edge cases:
+ * - s="a", t="a"  → single char, trivially isomorphic ✅
+ * - s="aa", t="ab" → map1 catches: 'a' mapped to 'a', sees 'b' → false ✅
+ * - s="ab", t="aa" → map2 catches: 'a' in t already claimed → false ✅
+ */
+public boolean isIsomorphic(String s, String t) {
+    Map<Character, Character> map1 = new HashMap<>(); // s → t
+    Map<Character, Character> map2 = new HashMap<>(); // t → s
+    for (int i = 0; i < s.length(); i++) {
+        char sChar = s.charAt(i);
+        char tChar = t.charAt(i);
+        // check s→t consistency
+        if (map1.containsKey(sChar) && map1.get(sChar) != tChar)
+            return false;
+        // check t→s consistency — catches two s chars mapping to same t char
+        if (map2.containsKey(tChar) && map2.get(tChar) != sChar)
+            return false;
+        // safe to store — no conflict detected
+        map1.put(sChar, tChar);
+        map2.put(tChar, sChar);
+    }
+    return true;
+}
