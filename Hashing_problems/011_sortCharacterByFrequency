@@ -1,0 +1,191 @@
+/*
+ * LC 451 — Sort Characters By Frequency
+ *
+ * PROBLEM:
+ * Given string s, sort it in decreasing order based on character frequency.
+ * Return any valid answer — no tiebreaker needed for same frequency chars.
+ *
+ * CONSTRAINTS:
+ * - Any ASCII character — uppercase, lowercase, digits
+ * - Case sensitive — 'A' and 'a' are DIFFERENT characters
+ *   'A'=ASCII 65, 'a'=ASCII 97 → different HashMap keys naturally
+ * - Return ANY valid ordering for same frequency chars
+ *
+ * SIMILARITY TO LC 347:
+ * LC 347 → freq map + bucket sort → return top k numbers
+ * LC 451 → freq map + bucket sort → return ALL chars × frequency
+ * Same bucket sort pattern, different output construction.
+ *
+ * ALL APPROACHES:
+ * ┌──────────────┬─────────────────────────────────────┬───────────┬──────┐
+ * │ Approach     │ Idea                                │ TC        │ SC   │
+ * ├──────────────┼─────────────────────────────────────┼───────────┼──────┤
+ * │ Brute Force  │ Freq map + sort entrySet by value   │ O(n log n)│ O(n) │
+ * │ Max Heap     │ Freq map + max heap, poll all       │ O(n log n)│ O(n) │
+ * │ Bucket Sort  │ Freq as index, append char × freq   │ O(n)      │ O(n) │
+ * └──────────────┴─────────────────────────────────────┴───────────┴──────┘
+ *
+ * NOTE — Max Heap vs Brute Force TC:
+ * Both O(n log n) here — unlike LC 347 where heap was O(n log k).
+ * LC 347 maintains heap of size k → O(n log k).
+ * LC 451 pushes ALL unique chars → heap size = unique chars → O(n log n).
+ * Bucket sort still strictly optimal at O(n).
+ *
+ * ─────────────────────────────────────────
+ * APPROACH 1 — BRUTE FORCE (Sort by frequency)
+ * ─────────────────────────────────────────
+ * WHY: Simple — build freq map, sort entries by count descending.
+ * HOW: Build freq map → sort entrySet by value desc →
+ *      append each char × its frequency to StringBuilder.
+ *
+ * TC: O(n log n) — sorting dominates
+ * SC: O(n)       — freq map + result string
+ * REJECTED: Bucket sort achieves O(n)
+ */
+public String frequencySortBrute(String s) {
+    Map<Character, Integer> map = new HashMap<>();
+    for (char c : s.toCharArray())
+        map.put(c, map.getOrDefault(c, 0) + 1);
+    // sort entries by frequency descending
+    List<Map.Entry<Character, Integer>> entries = new ArrayList<>(map.entrySet());
+    entries.sort((a, b) -> b.getValue() - a.getValue());
+    StringBuilder sb = new StringBuilder();
+    for (Map.Entry<Character, Integer> entry : entries)
+        // append char × its frequency
+        for (int j = 0; j < entry.getValue(); j++)
+            sb.append(entry.getKey());
+    return sb.toString();
+}
+
+/*
+ * ─────────────────────────────────────────
+ * APPROACH 2 — MAX HEAP (Intermediate)
+ * ─────────────────────────────────────────
+ * WHY Max Heap:
+ * Max heap ordered by frequency → poll() always gives highest freq char.
+ * Natural descending order without explicit sorting.
+ *
+ * WHY Max Heap not Min Heap here:
+ * LC 347 used min heap of size k — we only wanted top k elements.
+ * Here we want ALL characters sorted by frequency → max heap, poll all.
+ * Min heap would give ascending order → wrong direction.
+ *
+ * WHY SAME TC AS BRUTE FORCE:
+ * We push ALL unique characters into heap.
+ * Unlike LC 347 where heap maintained size k → O(n log k).
+ * Here heap size = unique char count → up to n → O(n log n).
+ * No TC advantage over sorting here.
+ *
+ * HOW:
+ * Build freq map → push all entries into max heap by frequency →
+ * poll one by one → append char × frequency to StringBuilder.
+ *
+ * TC: O(n log n) — n insertions into heap of size n
+ * SC: O(n)       — freq map + heap + StringBuilder
+ */
+public String frequencySortHeap(String s) {
+    Map<Character, Integer> map = new HashMap<>();
+    for (char c : s.toCharArray())
+        map.put(c, map.getOrDefault(c, 0) + 1);
+    // max heap — highest frequency polled first
+    PriorityQueue<Map.Entry<Character, Integer>> pq = new PriorityQueue<>(
+        (a, b) -> b.getValue() - a.getValue()
+    );
+    // push all entries — heap size = unique chars
+    pq.addAll(map.entrySet());
+    StringBuilder sb = new StringBuilder();
+    while (!pq.isEmpty()) {
+        Map.Entry<Character, Integer> entry = pq.poll();
+        // append char × its frequency
+        for (int j = 0; j < entry.getValue(); j++)
+            sb.append(entry.getKey());
+    }
+    return sb.toString();
+}
+
+/*
+ * ─────────────────────────────────────────
+ * APPROACH 3 — BUCKET SORT (Optimal)
+ * ─────────────────────────────────────────
+ * WHY BUCKET SORT:
+ * Max possible frequency = s.length() (all same char).
+ * Frequencies range 1 to n → bucket array size n+1 covers all cases.
+ * bucket[i] = list of chars appearing exactly i times.
+ * Scan right to left → highest frequency first → O(n).
+ *
+ * OUTPUT CONSTRUCTION:
+ * For each char in bucket[i], append it i times to StringBuilder.
+ * i = bucket index = frequency of that char.
+ * Inner loop: for(int j=0; j<i; j++) sb.append(c)
+ *
+ * CASE SENSITIVITY:
+ * 'A' and 'a' are different HashMap keys (ASCII 65 vs 97).
+ * No special handling needed — HashMap handles naturally.
+ * Example: "Aabb" → freq{A→1, a→1, b→2}
+ *          bucket[2]=['b'], bucket[1]=['A','a']
+ *          result = "bbAa" or "bbaA" ✅
+ *
+ * WHY iterate entrySet not string to fill buckets:
+ * Iterating string causes duplicates in buckets.
+ * entrySet() has one entry per unique char → no duplicates.
+ * Example: s="tree"
+ *   iterating string: 't','r','e','e' → bucket[1] gets 'e' twice! ❌
+ *   iterating entrySet: {t→1,r→1,e→2} → each char once ✅
+ *
+ * Dry run — s="tree":
+ * freq: {t→1, r→1, e→2}
+ * bucket[2]=['e'], bucket[1]=['t','r']
+ * scan right to left:
+ *   i=4,3: null → skip
+ *   i=2: c='e' → append 'e' twice  → sb="ee"
+ *   i=1: c='t' → append 't' once   → sb="eet"
+ *        c='r' → append 'r' once   → sb="eetr"
+ * return "eetr" ✅
+ *
+ * Dry run — s="cccaaa":
+ * freq: {c→3, a→3}
+ * bucket[3]=['c','a']
+ * i=3: c='c' → append 3 times → sb="ccc"
+ *      c='a' → append 3 times → sb="cccaaa"
+ * return "cccaaa" ✅ (any order valid for same freq)
+ *
+ * Dry run — s="Aabb":
+ * freq: {A→1, a→1, b→2}
+ * bucket[2]=['b'], bucket[1]=['A','a']
+ * i=2: c='b' → append twice  → sb="bb"
+ * i=1: c='A' → append once   → sb="bbA"
+ *      c='a' → append once   → sb="bbAa"
+ * return "bbAa" ✅
+ *
+ * TC: O(n) — freq map O(n) + bucket fill O(n) + scan O(n)
+ * SC: O(n) — freq map + bucket array + StringBuilder all O(n)
+ *
+ * Edge cases:
+ * - Single char string → bucket[1]=[c] → append once ✅
+ * - All same char → bucket[n]=[c] → append n times ✅
+ * - Same frequency chars → any order valid → both in same bucket ✅
+ */
+public String frequencySort(String s) {
+    Map<Character, Integer> map = new HashMap<>();
+    for (char c : s.toCharArray())
+        map.put(c, map.getOrDefault(c, 0) + 1);
+    // bucket array — index=frequency, value=list of chars with that freq
+    List<Character>[] bucket = new List[s.length() + 1];
+    for (Map.Entry<Character, Integer> entry : map.entrySet()) {
+        int count = entry.getValue();
+        char ch = entry.getKey();
+        if (bucket[count] == null)
+            bucket[count] = new ArrayList<>();
+        bucket[count].add(ch);
+    }
+    StringBuilder sb = new StringBuilder();
+    // scan right to left — highest frequency first
+    for (int i = bucket.length - 1; i >= 1; i--) {
+        if (bucket[i] == null) continue;
+        for (char c : bucket[i])
+            // append char exactly i times (i = frequency)
+            for (int j = 0; j < i; j++)
+                sb.append(c);
+    }
+    return sb.toString();
+}
