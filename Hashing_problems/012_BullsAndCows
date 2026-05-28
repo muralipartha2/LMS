@@ -1,0 +1,184 @@
+/*
+ * LC 299 — Bulls and Cows
+ *
+ * PROBLEM:
+ * Given secret number and guess, return hint as "xAyB" where:
+ * x = Bulls — correct digit in correct position
+ * y = Cows  — correct digit in wrong position
+ *
+ * CONSTRAINTS:
+ * - secret.length() == guess.length()
+ * - Both contain only digits 0-9
+ * - A digit can only be used once for bulls OR cows — not both
+ * - Same digit can appear multiple times — frequency matters
+ *
+ * CORE CHALLENGE — WHY SIMPLE SCAN FAILS:
+ * secret="1123", guess="0111"
+ * Position 1: both '1' → Bull
+ * Remaining: secret='1','2','3' guess='0','1','1'
+ * Guess has two '1's remaining but secret has only one '1' remaining
+ * → only 1 cow, not 2
+ * Need frequency tracking to handle digit reuse correctly.
+ *
+ * WHY min() FOR COWS:
+ * Cows for a digit = how many times that digit can be PAIRED
+ * between secret and guess remaining.
+ * Can only pair as many times as the smaller count.
+ * secret remaining: freq{1→3}, guess remaining: freq{1→2}
+ * → min(3,2) = 2 cows for digit '1' ✅
+ *
+ * STRING CONCATENATION:
+ * Use double quotes for "A" and "B" — not single quotes.
+ * bulls + 'A' + cows + 'B' → adds ASCII values → wrong! ❌
+ * bulls + "A" + cows + "B" → string concat → correct! ✅
+ *
+ * CHAR TO DIGIT CONVERSION:
+ * charAt() returns char → ASCII value if stored as int.
+ * '0'=48, '1'=49 ... '9'=57
+ * Subtract '0' to get actual digit: '7'-'0'=7
+ * Allows iterating digit 0 to 9 directly in cow counting loop.
+ *
+ * ALL APPROACHES:
+ * ┌─────────────────┬──────────────────────────────────┬──────┬──────┐
+ * │ Approach        │ Idea                             │ TC   │ SC   │
+ * ├─────────────────┼──────────────────────────────────┼──────┼──────┤
+ * │ Brute Force     │ For each non-bull digit in guess,│O(n²) │ O(1) │
+ * │                 │ scan secret for unused match     │      │      │
+ * │ Two HashMaps    │ Two pass — bulls then cows       │ O(n) │ O(1) │
+ * │                 │ via freq maps + min()            │      │      │
+ * └─────────────────┴──────────────────────────────────┴──────┴──────┘
+ *
+ * NOTE: SC is O(1) — maps store at most 10 digits (0-9), fixed size.
+ *
+ * ─────────────────────────────────────────
+ * APPROACH 1 — BRUTE FORCE
+ * ─────────────────────────────────────────
+ * WHY: Simplest — scan for each non-bull digit in secret.
+ * HOW:
+ * Pass 1 — find bulls, mark positions used.
+ * Pass 2 — for each non-bull digit in guess,
+ *           scan secret for unused matching digit → cow.
+ *
+ * CRITICAL — boolean[] used needed:
+ * Without tracking: same secret digit matched multiple times → wrong!
+ * Example: secret="1122", guess="2211"
+ *   Without used[]: '2' in guess matches secret[0]='1'? No.
+ *   matches secret[2]='2'? Yes → cow.
+ *   second '2' in guess matches secret[2] again → wrong! ❌
+ *
+ * TC: O(n²) — for each of n non-bull digits, scan n secret digits
+ * SC: O(n)  — boolean used[] array
+ * REJECTED: O(n²) too slow
+ */
+public String getHintBrute(String secret, String guess) {
+    int bulls = 0, cows = 0;
+    boolean[] usedSecret = new boolean[secret.length()];
+    boolean[] usedGuess = new boolean[guess.length()];
+    // pass 1 — find bulls
+    for (int i = 0; i < secret.length(); i++) {
+        if (secret.charAt(i) == guess.charAt(i)) {
+            bulls++;
+            usedSecret[i] = true;
+            usedGuess[i] = true;
+        }
+    }
+    // pass 2 — find cows
+    for (int i = 0; i < guess.length(); i++) {
+        if (usedGuess[i]) continue;
+        for (int j = 0; j < secret.length(); j++) {
+            if (!usedSecret[j] && guess.charAt(i) == secret.charAt(j)) {
+                cows++;
+                usedSecret[j] = true; // mark as used — can't match again
+                break;
+            }
+        }
+    }
+    return bulls + "A" + cows + "B";
+}
+
+/*
+ * ─────────────────────────────────────────
+ * APPROACH 2 — TWO HASHMAPS (Optimal)
+ * ─────────────────────────────────────────
+ * WHY Two Maps:
+ * secretCount tracks available digits in secret (excluding bulls).
+ * guessCount tracks digits in guess (excluding bulls).
+ * min(secretCount[d], guessCount[d]) for each digit d = cows for that digit.
+ *
+ * TWO PASS STRATEGY:
+ * Pass 1 — find bulls:
+ *   Iterate both strings simultaneously.
+ *   secret[i] == guess[i] → bull, skip for cow counting.
+ *   secret[i] != guess[i] → build freq maps for cow counting.
+ *
+ * Pass 2 — find cows:
+ *   Iterate digits 0-9.
+ *   cows += min(secretCount[d], guessCount[d])
+ *   min() handles "digit can only be used once" constraint.
+ *
+ * WHY iterate 0-9 not map entries:
+ * Simpler — fixed range, no iterator needed.
+ * getOrDefault(d, 0) handles missing digits gracefully.
+ *
+ * WHY subtract '0':
+ * charAt() returns char — ASCII value when stored as int.
+ * '7' = ASCII 55, not 7.
+ * Subtracting '0'(=48) gives actual digit: '7'-'0' = 7.
+ * Allows direct 0-9 iteration in cow loop.
+ *
+ * Dry run — secret="1807", guess="7810":
+ * Pass 1 bulls:
+ *   i=0: '1' vs '7' → diff → secretCount{1→1}, guessCount{7→1}
+ *   i=1: '8' vs '8' → bull! bulls=1
+ *   i=2: '0' vs '1' → diff → secretCount{1→1,0→1}, guessCount{7→1,1→1}
+ *   i=3: '7' vs '0' → diff → secretCount{1→1,0→1,7→1}, guessCount{7→1,1→1,0→1}
+ * Pass 2 cows:
+ *   digit 0: min(1,1)=1 → cows=1
+ *   digit 1: min(1,1)=1 → cows=2
+ *   digit 7: min(1,1)=1 → cows=3
+ * return "1A3B" ✅
+ *
+ * Dry run — secret="1123", guess="0111":
+ * Pass 1 bulls:
+ *   i=0: '1' vs '0' → diff → secretCount{1→1}, guessCount{0→1}
+ *   i=1: '1' vs '1' → bull! bulls=1
+ *   i=2: '2' vs '1' → diff → secretCount{1→1,2→1}, guessCount{0→1,1→1}
+ *   i=3: '3' vs '1' → diff → secretCount{1→1,2→1,3→1}, guessCount{0→1,1→2}
+ * Pass 2 cows:
+ *   digit 1: min(1,2)=1 → cows=1  ← only 1 cow despite guess having two '1's
+ *   others: 0
+ * return "1A1B" ✅
+ *
+ * TC: O(n)  — two passes over string + one pass over 10 digits = O(n)
+ * SC: O(1)  — maps store at most 10 digits (0-9) — fixed size
+ *
+ * Edge cases:
+ * - All bulls → freq maps empty → cows=0 ✅
+ * - No bulls → all non-matching → only cows counted ✅
+ * - Repeated digits handled by min() ✅
+ */
+public String getHint(String secret, String guess) {
+    int bulls = 0, cows = 0;
+    Map<Integer, Integer> secretCount = new HashMap<>();
+    Map<Integer, Integer> guessCount = new HashMap<>();
+    // pass 1 — bulls + build freq maps excluding bull positions
+    for (int i = 0; i < secret.length(); i++) {
+        int s = secret.charAt(i) - '0'; // convert char to actual digit
+        int g = guess.charAt(i) - '0';
+        if (s == g) {
+            bulls++;
+        } else {
+            // only non-bull positions contribute to cow counting
+            secretCount.put(s, secretCount.getOrDefault(s, 0) + 1);
+            guessCount.put(g, guessCount.getOrDefault(g, 0) + 1);
+        }
+    }
+    // pass 2 — cows via min() for each digit 0-9
+    for (int digit = 0; digit <= 9; digit++) {
+        cows += Math.min(
+            secretCount.getOrDefault(digit, 0),
+            guessCount.getOrDefault(digit, 0)
+        );
+    }
+    return bulls + "A" + cows + "B";
+}
