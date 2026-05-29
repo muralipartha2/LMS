@@ -1,0 +1,141 @@
+/*
+ * LC 271 — Encode and Decode Strings
+ *
+ * PROBLEM:
+ * Design an algorithm to encode a list of strings to a single string
+ * and decode that single string back to the original list.
+ *
+ * CONSTRAINTS:
+ * - Strings can contain ANY character including ',' '#' '/' etc.
+ * - Empty strings possible
+ * - Empty list possible
+ *
+ * WHY SIMPLE DELIMITER FAILS:
+ * Using ',' as delimiter:
+ *   ["hello,world","foo"] → "hello,world,foo"
+ *   decode → ["hello","world","foo"] ❌ split breaks on internal comma
+ * Any single character delimiter fails if strings contain that character.
+ *
+ * LENGTH PREFIX ENCODING — THE FIX:
+ * Prepend each word with its length + '#':
+ *   "lint" → "4#lint"
+ *   "he#llo" → "6#he#llo"  ← '#' inside string is safe!
+ *   "hel,lo" → "6#hel,lo"  ← ',' inside string is safe!
+ *
+ * WHY LENGTH PREFIX IS SAFE:
+ * Decoder never scans for '#' inside content.
+ * It reads length first → then reads EXACTLY that many chars.
+ * Any character inside content — '#', ',', '@' — never confuses decoder.
+ * Length acts as safe boundary marker.
+ *
+ * Example — strings containing '#':
+ *   Input:   ["#","##","###"]
+ *   Encoded: "1##2###3####"
+ *   Decode:
+ *     i=0: hashPos=1, length=1, word="#",   i=3
+ *     i=3: hashPos=4, length=2, word="##",  i=7
+ *     i=7: hashPos=8, length=3, word="###", i=12 ✅
+ *
+ * ALL APPROACHES:
+ * ┌──────────────────────┬────────────────────────────────┬──────┬──────┐
+ * │ Approach             │ Idea                           │ TC   │ SC   │
+ * ├──────────────────────┼────────────────────────────────┼──────┼──────┤
+ * │ Delimiter based      │ Join with rare delimiter       │ O(n) │ O(n) │
+ * │                      │ FAILS for arbitrary strings    │      │      │
+ * │ Length prefix        │ length#word for each string    │ O(n) │ O(n) │
+ * └──────────────────────┴────────────────────────────────┴──────┴──────┘
+ *
+ * WHERE n = total characters across all strings.
+ *
+ * ─────────────────────────────────────────
+ * ENCODE
+ * ─────────────────────────────────────────
+ * WHY StringBuilder not +=:
+ * String += creates new String object each iteration → O(n²) total.
+ * StringBuilder.append() amortized O(1) per append → O(n) total.
+ *
+ * HOW:
+ * For each string → append length + "#" + string to StringBuilder.
+ * Return final string.
+ *
+ * Example — ["lint","code","love","you"]:
+ * "lint" → append "4#lint"
+ * "code" → append "4#code"
+ * "love" → append "4#love"
+ * "you"  → append "3#you"
+ * result = "4#lint4#code4#love3#you" ✅
+ *
+ * TC: O(n) — one pass, n = total chars across all strings
+ * SC: O(n) — StringBuilder holds encoded string
+ *
+ * Edge cases:
+ * - Empty string "" → "0#" → decode reads length=0, word="" ✅
+ * - Empty list [] → "" → decode while loop never enters → [] ✅
+ */
+public String encode(List<String> strs) {
+    StringBuilder sb = new StringBuilder();
+    for (String str : strs) {
+        // length#word — length tells decoder exactly how many chars to read
+        sb.append(str.length()).append("#").append(str);
+    }
+    return sb.toString();
+}
+
+/*
+ * ─────────────────────────────────────────
+ * DECODE
+ * ─────────────────────────────────────────
+ * HOW — two pointer approach with indexOf:
+ * i = current position in encoded string
+ *
+ * At each iteration:
+ * 1. indexOf('#', i) → find next '#' starting from i
+ *    gives position of '#' separator
+ * 2. substring(i, hashPos) → extract length string → parseInt
+ * 3. substring(hashPos+1, hashPos+1+length) → extract exact word
+ * 4. i = hashPos + 1 + length → advance past this word
+ *
+ * WHY indexOf('#', i) not indexOf('#'):
+ * Must search from current position i, not from start.
+ * Without i: always finds first '#' in string → wrong for subsequent words.
+ *
+ * WHY parseInt safe here:
+ * substring(i, hashPos) always contains pure digits — we encoded it.
+ * hashPos always found because every word has a '#' separator.
+ *
+ * Dry run — "4#lint4#code3#you":
+ * i=0:  hashPos=1, length=4, word="lint", i=6
+ * i=6:  hashPos=7, length=4, word="code", i=12
+ * i=12: hashPos=14,length=3, word="you",  i=18
+ * i=18: 18 >= 18 → loop ends
+ * return ["lint","code","you"] ✅
+ *
+ * Dry run — strings with '#': "1##2###":
+ * i=0: hashPos=1, length=1, word="#",  i=3
+ * i=3: hashPos=4, length=2, word="##", i=7
+ * return ["#","##"] ✅
+ *
+ * TC: O(n) — single pass, indexOf and substring both O(n) total
+ * SC: O(n) — result list stores all decoded strings
+ *
+ * Edge cases:
+ * - Empty encoded string "" → while never enters → [] ✅
+ * - "0#" → hashPos=1, length=0, word="", i=2 → [""] ✅
+ * - Strings with any special chars → length guides decode, safe ✅
+ */
+public List<String> decode(String str) {
+    List<String> result = new ArrayList<>();
+    int i = 0;
+    while (i < str.length()) {
+        // find '#' separator starting from current position
+        int hashPos = str.indexOf('#', i);
+        // extract length — chars from i to hashPos are pure digits
+        int length = Integer.parseInt(str.substring(i, hashPos));
+        // extract exactly 'length' chars after '#'
+        String word = str.substring(hashPos + 1, hashPos + 1 + length);
+        result.add(word);
+        // advance past current word
+        i = hashPos + 1 + length;
+    }
+    return result;
+}
