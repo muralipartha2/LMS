@@ -1,0 +1,132 @@
+/*
+ * LC 128 — Longest Consecutive Sequence
+ *
+ * PROBLEM:
+ * Given unsorted integer array nums, return length of longest
+ * consecutive elements sequence.
+ * Must run in O(n) time.
+ *
+ * CONSTRAINTS:
+ * - 0 <= nums.length <= 10^5
+ * - -10^9 <= nums[i] <= 10^9
+ * - Array unsorted — can't use sorting (O(n log n))
+ * - Duplicates possible — HashSet naturally deduplicates
+ * - Must be O(n)
+ *
+ * CORE INSIGHT — SEQUENCE START DETECTION:
+ * Only start counting from the ACTUAL start of a sequence.
+ * num is a sequence start if (num-1) NOT in set.
+ * Skipping non-starts is critical for O(n):
+ *   Without skip: every element triggers chain check → O(n²)
+ *   With skip:    each element visited at most twice → O(n)
+ *
+ * WHY O(n) NOT O(n+k):
+ * Each number visited at most twice:
+ *   Once in outer for loop
+ *   At most once inside a while loop
+ * Sum of ALL while loop iterations across ALL sequence starts = n
+ * Each element belongs to exactly one sequence → total = 2n → O(n)
+ *
+ * WHY HashSet not sorting:
+ * Sorting → O(n log n) — violates O(n) constraint
+ * HashSet → O(1) contains() → enables O(n) solution
+ *
+ * WHY iterate set not nums:
+ * nums may have duplicates → same num checked twice unnecessarily
+ * set has unique elements → each num checked exactly once
+ *
+ * ALL APPROACHES:
+ * ┌──────────────────┬──────────────────────────────────┬──────────┬──────┐
+ * │ Approach         │ Idea                             │ TC       │ SC   │
+ * ├──────────────────┼──────────────────────────────────┼──────────┼──────┤
+ * │ Brute Force      │ Sort + scan adjacent             │ O(nlogn) │ O(1) │
+ * │ HashSet          │ Set + sequence start detection   │ O(n)     │ O(n) │
+ * └──────────────────┴──────────────────────────────────┴──────────┴──────┘
+ *
+ * ─────────────────────────────────────────
+ * APPROACH 1 — BRUTE FORCE (Sorting)
+ * ─────────────────────────────────────────
+ * WHY: Sort array → consecutive elements become adjacent.
+ * HOW: Sort → scan → if nums[i]+1 == nums[i+1] → extend sequence
+ *      Handle duplicates — skip if nums[i] == nums[i+1].
+ *
+ * TC: O(n log n) — sorting dominates
+ * SC: O(1)       — in-place sort
+ * REJECTED: Violates O(n) requirement
+ */
+public int longestConsecutiveBrute(int[] nums) {
+    if(nums.length == 0) return 0;
+    Arrays.sort(nums);
+    int maxLength = 1, length = 1;
+    for(int i = 1; i < nums.length; i++){
+        if(nums[i] == nums[i-1]) continue; // skip duplicates
+        if(nums[i] == nums[i-1] + 1) length++;
+        else length = 1;
+        maxLength = Math.max(maxLength, length);
+    }
+    return maxLength;
+}
+
+/*
+ * ─────────────────────────────────────────
+ * APPROACH 2 — HASHSET (Optimal)
+ * ─────────────────────────────────────────
+ * WHY HashSet:
+ * Need O(1) lookup — "does next consecutive number exist?"
+ * HashSet.contains() → O(1) average.
+ *
+ * HOW:
+ * Step 1 — add all nums to HashSet (deduplicates automatically)
+ * Step 2 — iterate set:
+ *   if num-1 NOT in set → num is sequence start
+ *       count consecutive nums using while loop
+ *       update max length
+ *   if num-1 in set → skip (not a start)
+ *
+ * WHILE LOOP — two increments:
+ * num++    → move to next consecutive number
+ * length++ → increase sequence length
+ * Both needed — without num++: infinite loop checking same number!
+ *
+ * Dry run — nums=[100,4,200,1,3,2]:
+ * set = {100,4,200,1,3,2}
+ * num=100: contains(99)?NO → start, while(101)?NO → length=1, result=1
+ * num=4:   contains(3)?YES → skip
+ * num=200: contains(199)?NO → start, while(201)?NO → length=1, result=1
+ * num=1:   contains(0)?NO → start
+ *          while(2)?YES → length=2,num=2
+ *          while(3)?YES → length=3,num=3
+ *          while(4)?YES → length=4,num=4
+ *          while(5)?NO  → stop → result=4 ✅
+ * num=3:   contains(2)?YES → skip
+ * num=2:   contains(1)?YES → skip
+ * return 4 ✅
+ *
+ * TC: O(n) — HashSet build O(n) + each element visited at most twice O(n)
+ * SC: O(n) — HashSet stores all unique elements
+ *
+ * Edge cases:
+ * - Empty array → result=0 → return 0 ✅
+ * - All duplicates [1,1,1] → set={1} → length=1 ✅
+ * - Single element → length=1 ✅
+ * - Negative numbers → HashSet handles any Integer ✅
+ */
+public int longestConsecutive(int[] nums) {
+    Set<Integer> set = new HashSet<>();
+    for(int num : nums)
+        set.add(num);
+    int result = 0;
+    for(int num : set){
+        // only start counting from sequence start
+        if(!set.contains(num - 1)){
+            int length = 1;
+            // count consecutive numbers
+            while(set.contains(num + 1)){
+                length++;
+                num++;
+            }
+            result = Math.max(result, length);
+        }
+    }
+    return result;
+}
