@@ -1,0 +1,202 @@
+/*
+ * LC 692 — Top K Frequent Words
+ *
+ * PROBLEM:
+ * Given array of strings and integer k, return k most frequent words
+ * sorted by frequency descending. Words with same frequency sorted
+ * alphabetically ascending.
+ *
+ * CONSTRAINTS:
+ * - 1 <= words.length <= 500
+ * - 1 <= words[i].length <= 10
+ * - words[i] consists of lowercase English letters
+ * - k is always valid
+ *
+ * SIMILARITY TO LC 347 — TOP K FREQUENT ELEMENTS:
+ * LC 347 → numbers, no tiebreaker needed → bucket sort works O(n)
+ * LC 692 → words, alphabetical tiebreaker needed → bucket sort O(n log n)
+ *           Min heap handles both frequency AND tiebreaker elegantly
+ *
+ * WHY BUCKET SORT IS O(n log n) HERE NOT O(n):
+ * Within same frequency bucket, words need alphabetical ordering.
+ * Sorting within each bucket costs O(m log m) where m = words in bucket.
+ * Worst case — all words same frequency → one bucket with n words
+ * → O(n log n) to sort that bucket — no better than brute force sort.
+ * Min heap handles tiebreaker naturally → preferred at O(n log k).
+ *
+ * INTEGER COMPARISON GOTCHA:
+ * getValue() returns Integer object — not primitive int.
+ * Java Integer cache covers only -128 to 127.
+ * For freq > 127: != compares object references → may return true
+ * even when values are equal → tiebreaker never triggers → wrong order!
+ * Fix: use !a.getValue().equals(b.getValue()) for safe Integer comparison.
+ *
+ * ALL APPROACHES:
+ * ┌─────────────────┬──────────────────────────────────────┬───────────┬──────┐
+ * │ Approach        │ Idea                                 │ TC        │ SC   │
+ * ├─────────────────┼──────────────────────────────────────┼───────────┼──────┤
+ * │ Brute Force     │ Freq map + sort with comparator      │ O(n log n)│ O(n) │
+ * │ Min Heap        │ Freq map + min heap size k           │ O(n log k)│ O(n) │
+ * │ Bucket Sort     │ Freq as index + sort within bucket   │ O(n log n)│ O(n) │
+ * └─────────────────┴──────────────────────────────────────┴───────────┴──────┘
+ *
+ * ─────────────────────────────────────────
+ * APPROACH 1 — BRUTE FORCE (Sort with comparator)
+ * ─────────────────────────────────────────
+ * WHY: Simple — build freq map, sort all words with custom comparator.
+ * HOW: Build freq map → sort all unique words by freq desc,
+ *      alphabetical asc for tiebreaker → take first k words.
+ *
+ * COMPARATOR:
+ * Primary   — freq descending: map.get(b) - map.get(a)
+ * Tiebreaker — alphabetical ascending: a.compareTo(b)
+ *
+ * TC: O(n log n) — sorting dominates
+ * SC: O(n)       — freq map + result list
+ * REJECTED: Min heap achieves O(n log k) — better when k << n
+ */
+public List<String> topKFrequentBrute(String[] words, int k) {
+    Map<String, Integer> map = new HashMap<>();
+    for (String s : words)
+        map.put(s, map.getOrDefault(s, 0) + 1);
+    List<String> result = new ArrayList<>(map.keySet());
+    // sort by freq desc, alphabetical asc for tiebreaker
+    result.sort((a, b) -> !map.get(a).equals(map.get(b))
+        ? map.get(b) - map.get(a)  // higher freq first
+        : a.compareTo(b));         // alphabetical for same freq
+    return result.subList(0, k);
+}
+
+/*
+ * ─────────────────────────────────────────
+ * APPROACH 2 — MIN HEAP (Optimal)
+ * ─────────────────────────────────────────
+ * WHY Min Heap not Max Heap:
+ * Min heap of size k — keeps only top k elements seen so far.
+ * When heap exceeds k, poll() removes least desirable element.
+ * Max heap would require polling all n elements → O(n log n).
+ *
+ * COMPARATOR DESIGN — two level ordering:
+ * Level 1 — frequency: lower freq = smaller = polled first (removed)
+ * Level 2 — tiebreaker: alphabetically LARGER = smaller = polled first
+ *   → alphabetically smaller words survive in heap
+ *   → final result alphabetically ordered for same freq words
+ *
+ * COMPARATOR:
+ * !a.getValue().equals(b.getValue())  ← safe Integer comparison
+ *     ? a.getValue() - b.getValue()   ← lower freq polled first
+ *     : b.getKey().compareTo(a.getKey()) ← alpha larger polled first
+ *
+ * WHY b.compareTo(a) not a.compareTo(b) for tiebreaker:
+ * PriorityQueue polls SMALLEST element first.
+ * We want alphabetically LARGER word removed → must be SMALLER by comparator.
+ * b.compareTo(a): if a="love", b="i"
+ *   → "i".compareTo("love") = negative → "love" larger → "love" polled first ✅
+ * a.compareTo(b): if a="love", b="i"
+ *   → "love".compareTo("i") = positive → "i" larger → "i" polled first ❌
+ *
+ * RESULT BUILDING — add at index 0:
+ * Min heap polls lowest frequency first → ascending order.
+ * Adding at index 0 each time reverses → descending frequency order ✅
+ *
+ * Dry run — ["i","love","leetcode","i","love","coding"], k=2:
+ * freq: {i→2, love→2, leetcode→1, coding→1}
+ * offer(i,2)        → heap:[i(2)]
+ * offer(love,2)     → heap:[love(2),i(2)] ← love smaller by tiebreaker
+ * offer(leetcode,1) → heap:[leetcode(1),love(2),i(2)] size=3>k
+ *                   → poll leetcode(1) → heap:[love(2),i(2)]
+ * offer(coding,1)   → heap:[coding(1),love(2),i(2)] size=3>k
+ *                   → poll coding(1) → heap:[love(2),i(2)]
+ * result:
+ * poll love(2) → add(0,"love") → ["love"]
+ * poll i(2)    → add(0,"i")    → ["i","love"] ✅
+ *
+ * TC: O(n log k) — n insertions each costing O(log k)
+ * SC: O(n)       — freq map O(n) + heap O(k)
+ *
+ * Edge cases:
+ * - All same frequency → tiebreaker handles alphabetical ordering ✅
+ * - freq > 127 → .equals() handles Integer comparison correctly ✅
+ * - k=1 → only most frequent word returned ✅
+ */
+public List<String> topKFrequent(String[] words, int k) {
+    Map<String, Integer> map = new HashMap<>();
+    for (String s : words)
+        map.put(s, map.getOrDefault(s, 0) + 1);
+    // min heap — lower freq polled first, same freq → alpha larger polled first
+    Queue<Map.Entry<String, Integer>> minHeap = new PriorityQueue<>(
+        (a, b) -> !a.getValue().equals(b.getValue())
+            ? a.getValue() - b.getValue()          // lower freq → polled first
+            : b.getKey().compareTo(a.getKey())     // same freq → alpha larger → polled first
+    );
+    for (Map.Entry<String, Integer> entry : map.entrySet()) {
+        minHeap.offer(entry);
+        // maintain heap size k — removes least desirable element
+        if (minHeap.size() > k) minHeap.poll();
+    }
+    List<String> result = new ArrayList<>();
+    while (!minHeap.isEmpty())
+        // add at index 0 — reverses ascending heap order → descending freq ✅
+        result.add(0, minHeap.poll().getKey());
+    return result;
+}
+
+/*
+ * ─────────────────────────────────────────
+ * APPROACH 3 — BUCKET SORT
+ * ─────────────────────────────────────────
+ * WHY BUCKET SORT:
+ * Same idea as LC 347 — use frequency as bucket index.
+ * Max frequency = words.length → bucket array size n+1.
+ * bucket[i] = list of words appearing exactly i times.
+ * Scan right to left → highest frequency first.
+ *
+ * WHY STILL O(n log n):
+ * Within same frequency bucket, words need alphabetical ordering.
+ * Must sort each bucket → O(m log m) where m = bucket size.
+ * Worst case all words same freq → O(n log n) — no advantage over brute.
+ * Included for pattern completeness — min heap is preferred.
+ *
+ * HOW:
+ * Build freq map → fill buckets by frequency →
+ * scan right to left → sort each bucket alphabetically →
+ * collect words until k reached.
+ *
+ * Dry run — ["i","love","leetcode","i","love","coding"], k=2:
+ * freq: {i→2, love→2, leetcode→1, coding→1}
+ * bucket[1] = ["leetcode","coding"]
+ * bucket[2] = ["i","love"]
+ * scan right to left:
+ * i=2: sort bucket[2] → ["i","love"]
+ *      collect "i"    → result=["i"], remaining=1
+ *      collect "love" → result=["i","love"], remaining=0 → stop
+ * return ["i","love"] ✅
+ *
+ * TC: O(n log n) — sorting within buckets worst case
+ * SC: O(n)       — bucket array + result list
+ */
+public List<String> topKFrequentBucket(String[] words, int k) {
+    Map<String, Integer> map = new HashMap<>();
+    for (String s : words)
+        map.put(s, map.getOrDefault(s, 0) + 1);
+    // bucket array — index=frequency, value=list of words with that freq
+    List<String>[] bucket = new List[words.length + 1];
+    for (Map.Entry<String, Integer> entry : map.entrySet()) {
+        int count = entry.getValue();
+        if (bucket[count] == null)
+            bucket[count] = new ArrayList<>();
+        bucket[count].add(entry.getKey());
+    }
+    List<String> result = new ArrayList<>();
+    // scan right to left — highest frequency first
+    for (int i = bucket.length - 1; i >= 1 && result.size() < k; i--) {
+        if (bucket[i] == null) continue;
+        // sort alphabetically within same frequency bucket
+        Collections.sort(bucket[i]);
+        for (String word : bucket[i]) {
+            result.add(word);
+            if (result.size() == k) break;
+        }
+    }
+    return result;
+}
