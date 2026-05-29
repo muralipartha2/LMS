@@ -1,0 +1,176 @@
+/*
+ * LC 238 — Product of Array Except Self
+ *
+ * PROBLEM:
+ * Given integer array nums, return array answer where answer[i]
+ * equals product of all elements of nums except nums[i].
+ *
+ * CONSTRAINTS:
+ * - 2 <= nums.length <= 10^5
+ * - -30 <= nums[i] <= 30
+ * - No division operation allowed — explicitly stated
+ * - O(n) time required
+ * - O(1) extra space — output array doesn't count
+ * - Array can contain zeros — handle carefully
+ *
+ * CORE INSIGHT — PREFIX × SUFFIX:
+ * For each index i:
+ *   answer[i] = product of all elements LEFT of i
+ *             × product of all elements RIGHT of i
+ * Current index naturally excluded:
+ *   prefix[i] = product of everything BEFORE i → excludes i
+ *   suffix[i] = product of everything AFTER  i → excludes i
+ *
+ * WHY NO DIVISION:
+ * Simple approach: totalProduct / nums[i] per index.
+ * Fails when nums contains zeros — division by zero.
+ * Even with zero handling, division explicitly forbidden.
+ * Prefix × suffix approach avoids division entirely.
+ *
+ * ALL APPROACHES:
+ * ┌──────────────────────┬────────────────────────────────┬──────┬──────┐
+ * │ Approach             │ Idea                           │ TC   │ SC   │
+ * ├──────────────────────┼────────────────────────────────┼──────┼──────┤
+ * │ Brute Force          │ For each i, multiply all others│O(n²) │ O(1) │
+ * │ Prefix+Suffix Arrays │ Two separate arrays            │ O(n) │ O(n) │
+ * │ Optimized            │ result[] as prefix, suffix var │ O(n) │ O(1) │
+ * └──────────────────────┴────────────────────────────────┴──────┴──────┘
+ *
+ * ─────────────────────────────────────────
+ * APPROACH 1 — BRUTE FORCE
+ * ─────────────────────────────────────────
+ * WHY: Simplest — for each index multiply all other elements.
+ * HOW: Two nested loops. For each i, multiply all j != i.
+ *
+ * TC: O(n²) — n elements, each requiring n-1 multiplications
+ * SC: O(1)  — no extra space beyond result array
+ * REJECTED: O(n²) too slow for n=10^5
+ */
+public int[] productExceptSelfBrute(int[] nums) {
+    int n = nums.length;
+    int[] result = new int[n];
+    for (int i = 0; i < n; i++) {
+        int product = 1;
+        for (int j = 0; j < n; j++) {
+            // skip current index — multiply all others
+            if (i != j) product *= nums[j];
+        }
+        result[i] = product;
+    }
+    return result;
+}
+
+/*
+ * ─────────────────────────────────────────
+ * APPROACH 2 — PREFIX + SUFFIX ARRAYS
+ * ─────────────────────────────────────────
+ * WHY: O(n) by precomputing left and right products separately.
+ * HOW:
+ * leftProduct[i]  = product of all elements before index i
+ * rightProduct[i] = product of all elements after index i
+ * result[i] = leftProduct[i] × rightProduct[i]
+ *
+ * leftProduct[0] = 1  (nothing to left of index 0)
+ * leftProduct[i] = leftProduct[i-1] × nums[i-1]
+ *
+ * rightProduct[n-1] = 1  (nothing to right of last index)
+ * rightProduct[i]   = rightProduct[i+1] × nums[i+1]
+ *
+ * Example — nums=[1,2,3,4]:
+ * leftProduct  = [1,  1,  2,  6]
+ * rightProduct = [24, 12, 4,  1]
+ * result       = [24, 12, 8,  6] ✅
+ *
+ * TC: O(n) — three passes over array
+ * SC: O(n) — two extra arrays of size n
+ * REJECTED: Uses O(n) extra space — follow-up asks for O(1)
+ */
+public int[] productExceptSelfTwoArrays(int[] nums) {
+    int n = nums.length;
+    int[] leftProduct = new int[n];
+    int[] rightProduct = new int[n];
+    int[] result = new int[n];
+    // build left products
+    leftProduct[0] = 1;
+    for (int i = 1; i < n; i++)
+        leftProduct[i] = leftProduct[i - 1] * nums[i - 1];
+    // build right products
+    rightProduct[n - 1] = 1;
+    for (int i = n - 2; i >= 0; i--)
+        rightProduct[i] = rightProduct[i + 1] * nums[i + 1];
+    // combine
+    for (int i = 0; i < n; i++)
+        result[i] = leftProduct[i] * rightProduct[i];
+    return result;
+}
+
+/*
+ * ─────────────────────────────────────────
+ * APPROACH 3 — OPTIMIZED O(1) SPACE (Optimal)
+ * ─────────────────────────────────────────
+ * WHY O(1) SPACE:
+ * Observation — we don't need both arrays simultaneously.
+ * Use result[] itself to store left products first.
+ * Then traverse right to left with single running suffix variable.
+ * Multiply suffix into result[] on the fly — no separate array needed.
+ *
+ * HOW:
+ * Pass 1 — left products stored directly in result[]:
+ *   result[0] = 1
+ *   result[i] = result[i-1] * nums[i-1]
+ *
+ * Pass 2 — right to left with running rightProduct variable:
+ *   rightProduct starts = 1
+ *   result[i] *= rightProduct  (multiply accumulated right product)
+ *   rightProduct *= nums[i]    (update for next iteration)
+ *
+ * KEY — UPDATE ORDER IN PASS 2:
+ * result[i] *= rightProduct BEFORE updating rightProduct.
+ * If updated after: rightProduct includes nums[i] → wrong!
+ *
+ * Dry run — nums=[1,2,3,4]:
+ * After pass 1: result=[1,1,2,6]
+ * Pass 2:
+ *   i=3: result[3]=1*6=6,  rightProduct=1*4=4
+ *   i=2: result[2]=4*2=8,  rightProduct=4*3=12
+ *   i=1: result[1]=12*1=12, rightProduct=12*2=24
+ *   i=0: result[0]=24*1=24, rightProduct=24*1=24
+ * result=[24,12,8,6] ✅
+ *
+ * Zero handling:
+ * nums=[-1,1,0,-3,3]
+ * Pass 1: result=[1,-1,-1,0,0]
+ * Pass 2:
+ *   i=4: result[4]=1*0=0,   rightProduct=1*3=3
+ *   i=3: result[3]=3*0=0,   rightProduct=3*(-3)=-9
+ *   i=2: result[2]=-9*(-1)=9, rightProduct=-9*0=0
+ *   i=1: result[1]=0*(-1)=0,  rightProduct=0*1=0
+ *   i=0: result[0]=0*1=0,   rightProduct=0*(-1)=0
+ * result=[0,0,9,0,0] ✅
+ *
+ * TC: O(n) — two passes over array
+ * SC: O(1) — only one extra variable rightProduct
+ *            output array result[] doesn't count as extra space
+ *
+ * Edge cases:
+ * - Single zero → all products 0 except position of zero ✅
+ * - Two zeros → all products 0 ✅
+ * - Negatives → handled naturally by multiplication ✅
+ */
+public int[] productExceptSelf(int[] nums) {
+    int n = nums.length;
+    int[] result = new int[n];
+    // pass 1 — store left products in result[]
+    result[0] = 1;
+    for (int i = 1; i < n; i++)
+        result[i] = result[i - 1] * nums[i - 1];
+    // pass 2 — multiply right products on the fly
+    int rightProduct = 1;
+    for (int i = n - 1; i >= 0; i--) {
+        // multiply accumulated right product into result
+        result[i] *= rightProduct;
+        // update rightProduct AFTER — must not include nums[i]
+        rightProduct *= nums[i];
+    }
+    return result;
+}
