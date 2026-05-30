@@ -1,0 +1,134 @@
+/*
+ * LC 325 — Maximum Size Subarray Sum Equals k
+ * (LeetCode Premium — also on GeeksforGeeks / Coding Ninjas free)
+ *
+ * PROBLEM:
+ * Given array nums and integer k, find length of LONGEST subarray
+ * that sums to k. Return 0 if none exists.
+ *
+ * CONSTRAINTS:
+ * - Negatives possible → sliding window won't work, need prefix sum + HashMap
+ * - Want longest length → store first index, never update
+ *
+ * ════════════════════════════════════════════════
+ * THE THEORY — SIMPLE WORDS
+ * ════════════════════════════════════════════════
+ * We walk through keeping a running total.
+ * For each position, we ask:
+ *   "Have I seen a running total of (current total minus k) before?"
+ * If yes — the chunk between that old position and now adds up to k.
+ * We remember each running total and the FIRST position we saw it.
+ * First only — because we want the longest possible chunk.
+ * When we find a match, length = current index minus stored index.
+ *
+ * RULE OF THUMB:
+ * found (currentSum - k) earlier → subarray between sums to k.
+ *
+ * ════════════════════════════════════════════════
+ * WHY FIRST INDEX (never update)
+ * ════════════════════════════════════════════════
+ * We want LONGEST subarray → largest gap → earliest start.
+ * So store first time a prefix sum appears, never overwrite.
+ * (LC 560 counted subarrays so stored frequency and always updated —
+ *  different goal, different storage.)
+ *
+ * ════════════════════════════════════════════════
+ * BASE CASE {0 → -1}
+ * ════════════════════════════════════════════════
+ * Sum 0 exists before array starts.
+ * Handles subarrays starting from index 0:
+ *   if prefixSum == k → looking for 0 → found at -1
+ *   → length = i - (-1) = i + 1 → whole prefix counted ✅
+ *
+ * ════════════════════════════════════════════════
+ * COMPARISON — THE PREFIX SUM FAMILY
+ * ════════════════════════════════════════════════
+ * ┌──────────────┬───────────────┬──────────────┬──────────────┬──────────────┐
+ * │              │ LC 560        │ LC 525       │ LC 523       │ LC 325       │
+ * ├──────────────┼───────────────┼──────────────┼──────────────┼──────────────┤
+ * │ Goal         │ count         │ longest len  │ exists?      │ longest len  │
+ * │              │               │ (equal 0/1)  │ (multiple k) │ (sum = k)    │
+ * │ Map key      │ prefixSum     │ prefixSum    │ prefixSum%k  │ prefixSum    │
+ * │ Map value    │ frequency     │ first index  │ first index  │ first index  │
+ * │ Map update   │ always        │ if absent    │ if absent    │ if absent    │
+ * │ Look for     │ sum-k         │ same sum     │ same rem     │ sum-k        │
+ * └──────────────┴───────────────┴──────────────┴──────────────┴──────────────┘
+ *
+ * MASTER RULE:
+ * - Counting subarrays    → store frequency, always update
+ * - Longest/shortest      → store first index, never update
+ *
+ * ALL APPROACHES:
+ * ┌──────────────────┬──────────────────────────────────┬──────┬──────┐
+ * │ Approach         │ Idea                             │ TC   │ SC   │
+ * ├──────────────────┼──────────────────────────────────┼──────┼──────┤
+ * │ Brute Force      │ Every subarray, track longest    │O(n²) │ O(1) │
+ * │ Prefix+HashMap   │ prefixSum→first index            │ O(n) │ O(n) │
+ * └──────────────────┴──────────────────────────────────┴──────┴──────┘
+ *
+ * ─────────────────────────────────────────
+ * APPROACH 1 — BRUTE FORCE
+ * ─────────────────────────────────────────
+ * WHY: Simplest — check every subarray sum, track longest hitting k.
+ * TC: O(n²) — all subarrays
+ * SC: O(1)
+ * REJECTED: too slow for large n
+ */
+public int maxSubArrayLenBrute(int[] nums, int k) {
+    int maxLen = 0;
+    for (int i = 0; i < nums.length; i++) {
+        int sum = 0;
+        for (int j = i; j < nums.length; j++) {
+            sum += nums[j];
+            if (sum == k) maxLen = Math.max(maxLen, j - i + 1);
+        }
+    }
+    return maxLen;
+}
+
+/*
+ * ─────────────────────────────────────────
+ * APPROACH 2 — PREFIX SUM + HASHMAP (Optimal)
+ * ─────────────────────────────────────────
+ * HOW:
+ * map stores prefixSum → first index.
+ * Initialize {0 → -1}.
+ * For each i:
+ *   prefixSum += nums[i]
+ *   if (prefixSum - k) in map → maxLen = max(maxLen, i - map.get(prefixSum-k))
+ *   if prefixSum NOT in map → store prefixSum → i (first occurrence only)
+ *
+ * Dry run — nums=[1,-1,5,-2,3], k=3:
+ * map={0→-1}
+ * i=0: sum=1, look -2 → no → store {0→-1,1→0}
+ * i=1: sum=0, look -3 → no → 0 exists, don't update
+ * i=2: sum=5, look 2  → no → store {0→-1,1→0,5→2}
+ * i=3: sum=3, look 0  → YES at -1 → len=3-(-1)=4, maxLen=4
+ * i=4: sum=6, look 3  → no → store 6→4
+ * return 4 ✅
+ *
+ * TC: O(n) — single pass
+ * SC: O(n) — map stores distinct prefix sums
+ *
+ * Edge cases:
+ * - No subarray sums to k → maxLen stays 0 ✅
+ * - Negatives → handled, prefix sums can repeat/decrease ✅
+ * - Whole array sums to k → base case {0→-1} gives full length ✅
+ */
+public int maxSubArrayLen(int[] nums, int k) {
+    Map<Integer, Integer> map = new HashMap<>();
+    map.put(0, -1); // base case — sum 0 before array starts
+    int prefixSum = 0, maxLen = 0;
+    for (int i = 0; i < nums.length; i++) {
+        prefixSum += nums[i];
+        // a previous prefix sum makes current chunk = k
+        if (map.containsKey(prefixSum - k)) {
+            maxLen = Math.max(maxLen, i - map.get(prefixSum - k));
+        }
+        // store first occurrence only — want longest, so keep earliest index
+        if (!map.containsKey(prefixSum)) {
+            map.put(prefixSum, i);
+        }
+    }
+    return maxLen;
+}
