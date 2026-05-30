@@ -1,0 +1,127 @@
+/*
+ * LC 525 — Contiguous Array
+ *
+ * PROBLEM:
+ * Given binary array (0s and 1s), find length of longest subarray
+ * with equal number of 0s and 1s.
+ *
+ * ════════════════════════════════════════════════
+ * THE THEORY — STEP BY STEP IN SIMPLE WORDS
+ * ════════════════════════════════════════════════
+ *
+ * STEP 1 — TRANSFORM THE PROBLEM
+ * Replace every 0 with -1.
+ * Now "equal 0s and 1s" becomes "subarray sum equals 0".
+ * Because: each 0 contributes -1, each 1 contributes +1.
+ * Equal count → they cancel out → sum = 0.
+ *
+ * Example:
+ *   nums     = [0,  1,  0,  1]
+ *   replaced = [-1, 1, -1,  1]
+ *   equal 0s and 1s → sum = 0 ✅
+ *
+ * STEP 2 — THE KEY INSIGHT (why HashMap needed)
+ * Track running sum (prefix sum) as we iterate.
+ * THE MAGIC RULE:
+ *   If the same prefix sum appears at two different indices i and j,
+ *   then the subarray BETWEEN them sums to 0.
+ *
+ * Why? If sum is same at both points, nothing net was added between them.
+ *   prefixSum[i] == prefixSum[j]
+ *   → elements between i+1 and j cancel out
+ *   → that subarray has equal 0s and 1s
+ *   → length = j - i
+ *
+ * STEP 3 — WHY WE STORE ALL SUMS, NOT JUST WHEN SUM=0
+ * Beginners think: "just check when running sum becomes 0".
+ * That ONLY catches subarrays starting from index 0.
+ * It MISSES subarrays in the middle.
+ *
+ * Example where sum NEVER hits 0:
+ *   replaced = [-1, -1, 1, -1, -1, -1, 1, 1]
+ *   prefixSums: -1,-2,-1,-2,-3,-4,-3,-2
+ *   Sum never equals 0!
+ *   BUT prefixSum=-2 appears at index 1 and index 7
+ *   → subarray from index 2 to 7 sums to 0 → length 6 ✅
+ *   Checking only "sum==0" would return 0 — completely wrong!
+ *
+ * This is why we store EVERY prefix sum in the HashMap.
+ *
+ * STEP 4 — WHAT THE HASHMAP STORES
+ *   map: prefixSum → FIRST index where this sum appeared
+ *
+ * WHY FIRST index (never update if already present):
+ *   We want the LONGEST subarray → largest (j - i)
+ *   → we need the SMALLEST i (earliest occurrence)
+ *   → so store first time only, never overwrite
+ *
+ * STEP 5 — THE BASE CASE {0 → -1}
+ * We initialize map with prefixSum=0 at index -1.
+ * This represents "sum of 0 exists before the array starts".
+ * It handles subarrays that start from index 0:
+ *   If prefixSum at index j = 0
+ *   → length = j - (-1) = j + 1
+ *   → entire subarray from 0 to j counted correctly ✅
+ *
+ * ════════════════════════════════════════════════
+ * THE ALGORITHM
+ * ════════════════════════════════════════════════
+ * 1. Replace all 0 with -1
+ * 2. Initialize map = {0 → -1}, sum = 0, maxLen = 0
+ * 3. For each index i:
+ *    a. sum += nums[i]
+ *    b. if sum already in map:
+ *         length = i - map.get(sum)
+ *         maxLen = max(maxLen, length)
+ *       else:
+ *         map.put(sum, i)   ← store first occurrence only
+ * 4. Return maxLen
+ *
+ * ════════════════════════════════════════════════
+ * COMPARISON WITH RELATED PROBLEMS
+ * ════════════════════════════════════════════════
+ * ┌──────────────┬────────────────┬───────────────────┬──────────────────┐
+ * │              │ LC 560         │ LC 525            │ Longest Sum K    │
+ * ├──────────────┼────────────────┼───────────────────┼──────────────────┤
+ * │ Goal         │ count subarrays│ longest subarray  │ longest subarray │
+ * │ Map stores   │ sum→frequency  │ sum→first index   │ sum→first index  │
+ * │ Map update   │ always update  │ only if absent    │ only if absent   │
+ * │ Result       │ count+=freq    │ max(i-firstIdx)   │ max(i-firstIdx)  │
+ * └──────────────┴────────────────┴───────────────────┴──────────────────┘
+ *
+ * RULE OF THUMB:
+ * - Counting subarrays → store frequency, always update
+ * - Longest/shortest subarray → store first index, never update
+ *
+ * ════════════════════════════════════════════════
+ * COMPLEXITY
+ * ════════════════════════════════════════════════
+ * TC: O(n) — single pass, O(1) map operations
+ * SC: O(n) — map stores at most n distinct prefix sums
+ *
+ * Edge cases:
+ * - All same (e.g. [0,0,0]) → no equal subarray → return 0
+ * - [0,1] → sum hits 0 at index 1 → length 2 ✅
+ * - Sum never hits 0 but repeats → caught by HashMap ✅
+ */
+public int findMaxLength(int[] nums) {
+    // step 1 — replace 0 with -1 so equal 0s/1s becomes sum=0
+    for (int i = 0; i < nums.length; i++)
+        if (nums[i] == 0) nums[i] = -1;
+
+    Map<Integer, Integer> map = new HashMap<>();
+    map.put(0, -1); // base case — sum 0 exists before array starts
+    int sum = 0, maxLen = 0;
+
+    for (int i = 0; i < nums.length; i++) {
+        sum += nums[i];
+        if (map.containsKey(sum)) {
+            // same prefix sum seen before → subarray between sums to 0
+            maxLen = Math.max(maxLen, i - map.get(sum));
+        } else {
+            // store FIRST occurrence only — never update (want longest)
+            map.put(sum, i);
+        }
+    }
+    return maxLen;
+}
