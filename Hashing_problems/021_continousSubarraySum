@@ -1,0 +1,158 @@
+/*
+ * LC 523 — Continuous Subarray Sum
+ *
+ * PROBLEM:
+ * Given integer array nums and integer k, return true if nums has a
+ * continuous subarray of size at least two whose sum is a multiple of k.
+ *
+ * CONSTRAINTS:
+ * - 1 <= nums.length <= 10^5
+ * - 0 <= nums[i] <= 10^9
+ * - 1 <= k <= 2^31 - 1
+ * - Subarray must have AT LEAST 2 elements
+ * - Sum must be MULTIPLE of k (not exactly k)
+ * - Zeros possible → [0,0] is valid for any k (0 is multiple of everything)
+ *
+ * ════════════════════════════════════════════════
+ * THE THEORY — SIMPLE WORDS
+ * ════════════════════════════════════════════════
+ * We walk through the array keeping a running total.
+ * Each step, divide running total by k, keep only the REMAINDER.
+ *
+ * THE MAGIC:
+ * If we see the SAME REMAINDER twice, the numbers added in between
+ * form a perfect multiple of k.
+ *
+ * WHY:
+ * If two running totals leave the same remainder when divided by k,
+ * their difference divides evenly by k.
+ *   prefixSum[j] % k == prefixSum[i] % k
+ *   → (prefixSum[j] - prefixSum[i]) % k == 0
+ *   → subarray between i+1 and j is a multiple of k
+ *
+ * RULE OF THUMB: remainder repeats → multiple of k found between them.
+ *
+ * ════════════════════════════════════════════════
+ * WHAT THE MAP STORES
+ * ════════════════════════════════════════════════
+ * map: remainder → FIRST index where this remainder appeared
+ *
+ * WHY FIRST index (never update if exists):
+ * We want the gap between two same-remainder positions to be as
+ * large as possible — to satisfy "size at least 2".
+ * Updating the index would shrink the gap → might miss valid subarrays.
+ *
+ * Example why update breaks it — nums=[5,0,0], k=5:
+ *   i=0: remainder=0, already in map at -1, gap=1 not >=2, DON'T update
+ *   i=1: remainder=0, still at -1, gap=2 >=2 → return true ✅
+ *   If we had updated 0→0 at i=0: gap at i=1 = 1 → missed answer ❌
+ *
+ * ════════════════════════════════════════════════
+ * THE SIZE AT LEAST 2 CHECK
+ * ════════════════════════════════════════════════
+ * When same remainder found:
+ *   gap = currentIndex - storedIndex
+ *   if gap >= 2 → valid subarray of size at least 2 → return true
+ *
+ * ════════════════════════════════════════════════
+ * BASE CASE {0 → -1}
+ * ════════════════════════════════════════════════
+ * Pretend remainder 0 existed at position -1.
+ * Handles subarrays starting from index 0 that are themselves multiples of k.
+ * Example: nums=[2,4], k=6 → prefixSum=6, remainder=0
+ *   0 found at -1 → gap = 1-(-1) = 2 → return true ✅
+ *
+ * ════════════════════════════════════════════════
+ * COMPARISON WITH RELATED PROBLEMS
+ * ════════════════════════════════════════════════
+ * ┌──────────────┬────────────────┬───────────────────┬──────────────────┐
+ * │              │ LC 560         │ LC 525            │ LC 523           │
+ * ├──────────────┼────────────────┼───────────────────┼──────────────────┤
+ * │ Goal         │ count subarrays│ longest len       │ exists? (boolean)│
+ * │ Map key      │ prefixSum      │ prefixSum         │ prefixSum % k    │
+ * │ Map value    │ frequency      │ first index       │ first index      │
+ * │ Map update   │ always         │ only if absent    │ only if absent   │
+ * └──────────────┴────────────────┴───────────────────┴──────────────────┘
+ *
+ * ALL APPROACHES:
+ * ┌──────────────────┬──────────────────────────────────┬──────┬──────┐
+ * │ Approach         │ Idea                             │ TC   │ SC   │
+ * ├──────────────────┼──────────────────────────────────┼──────┼──────┤
+ * │ Brute Force      │ Every subarray sum, check % k    │O(n²) │ O(1) │
+ * │ Remainder+HashMap│ remainder→first index            │ O(n) │min(n,k)│
+ * └──────────────────┴──────────────────────────────────┴──────┴──────┘
+ *
+ * ─────────────────────────────────────────
+ * APPROACH 1 — BRUTE FORCE
+ * ─────────────────────────────────────────
+ * WHY: Simplest — check every subarray of size >= 2.
+ * HOW: Two nested loops, compute sum, check if sum % k == 0.
+ *
+ * TC: O(n²) — all subarrays
+ * SC: O(1)  — no extra space
+ * REJECTED: O(n²) too slow for n=10^5
+ */
+public boolean checkSubarraySumBrute(int[] nums, int k) {
+    for (int i = 0; i < nums.length; i++) {
+        int sum = nums[i];
+        for (int j = i + 1; j < nums.length; j++) {
+            sum += nums[j];
+            // subarray size >= 2 guaranteed since j starts at i+1
+            if (sum % k == 0) return true;
+        }
+    }
+    return false;
+}
+
+/*
+ * ─────────────────────────────────────────
+ * APPROACH 2 — REMAINDER + HASHMAP (Optimal)
+ * ─────────────────────────────────────────
+ * WHY HashMap:
+ * Need to know if current remainder was seen before → O(1) lookup.
+ *
+ * HOW:
+ * map stores remainder → first index.
+ * Initialize {0 → -1} base case.
+ * For each index:
+ *   prefixSum += nums[i]
+ *   remainder = prefixSum % k
+ *   if remainder seen before:
+ *     gap = i - firstIndex
+ *     if gap >= 2 → return true
+ *   else:
+ *     store remainder → i (first occurrence only)
+ *
+ * Dry run — nums=[23,2,4,6,7], k=6:
+ * map={0→-1}
+ * i=0: sum=23, rem=5, not seen → store {0→-1, 5→0}
+ * i=1: sum=25, rem=1, not seen → store {0→-1, 5→0, 1→1}
+ * i=2: sum=29, rem=5, SEEN at 0 → gap=2-0=2 >=2 → return true ✅
+ *      ([2,4] sums to 6 = 6×1)
+ *
+ * TC: O(n) — single pass, O(1) map operations
+ * SC: O(min(n,k)) — at most k distinct remainders possible
+ *
+ * Edge cases:
+ * - [0,0] any k → prefixSum stays 0, remainder 0 → gap 2 → true ✅
+ * - Subarray from index 0 → base case {0→-1} handles it ✅
+ * - Single element → loop can't form size-2 subarray → false ✅
+ */
+public boolean checkSubarraySum(int[] nums, int k) {
+    Map<Integer, Integer> remainderMap = new HashMap<>();
+    remainderMap.put(0, -1); // base case — remainder 0 before array starts
+    int prefixSum = 0;
+    for (int i = 0; i < nums.length; i++) {
+        prefixSum += nums[i];
+        int remainder = prefixSum % k;
+        if (remainderMap.containsKey(remainder)) {
+            int prevIndex = remainderMap.get(remainder);
+            // size at least 2 check
+            if (i - prevIndex >= 2) return true;
+        } else {
+            // store first occurrence only — keeps gap maximal
+            remainderMap.put(remainder, i);
+        }
+    }
+    return false;
+}
