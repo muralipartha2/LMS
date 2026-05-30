@@ -1,0 +1,138 @@
+/*
+ * LC 560 — Subarray Sum Equals K
+ *
+ * PROBLEM:
+ * Given integer array nums and integer k, return total number
+ * of subarrays whose sum equals k.
+ *
+ * CONSTRAINTS:
+ * - 1 <= nums.length <= 2*10^4
+ * - -1000 <= nums[i] <= 1000  ← negatives possible!
+ * - -10^7 <= k <= 10^7
+ * - Negatives mean sliding window WON'T work — sum not monotonic
+ * - Need prefix sum + HashMap approach
+ *
+ * CORE INSIGHT — PREFIX SUM DIFFERENCE:
+ * subarray sum from i to j = prefixSum[j] - prefixSum[i-1]
+ * If this equals k:
+ *   prefixSum[j] - prefixSum[i-1] = k
+ *   prefixSum[i-1] = prefixSum[j] - k
+ * So for each j, count how many previous prefix sums equal (currentSum - k)
+ * → O(1) HashMap lookup instead of O(n) scan → O(n) overall!
+ *
+ * WHY map.put(0,1) BASE CASE:
+ * Represents virtual prefix sum before index 0 — empty prefix.
+ * Handles subarrays starting from index 0:
+ *   nums=[3,2], k=5
+ *   prefixSum at index 1 = 5
+ *   check (5-5)=0 → found! count++ ✅
+ * Without it — subarrays starting from index 0 are missed.
+ *
+ * WHY count += map.get(prefixSum-k) not count++:
+ * Same prefixSum can appear multiple times.
+ * Each occurrence represents a different valid subarray start.
+ * Must add frequency, not just 1.
+ * Example: nums=[1,0,1], k=1
+ *   prefixSum=1 appears twice → two different subarrays end at same point
+ *
+ * WHY SLIDING WINDOW FAILS:
+ * Sliding window works only when all numbers positive → sum monotonically increases.
+ * Negative numbers break monotonicity → can't shrink window reliably.
+ * Example: nums=[1,-1,1], k=1 → sliding window gives wrong answer.
+ *
+ * TWO CONVENTIONS FOR PREFIX SUM:
+ * Convention A (used here) — sum includes current element:
+ *   sum += nums[i] FIRST, then check map
+ *   loop runs 0 to n-1
+ * Convention B — sum excludes current element:
+ *   check map FIRST, then sum += nums[i]
+ *   loop runs 0 to n (extra iteration for last element)
+ * Convention A cleaner — no extra iteration needed.
+ *
+ * ALL APPROACHES:
+ * ┌──────────────────┬──────────────────────────────────┬──────┬──────┐
+ * │ Approach         │ Idea                             │ TC   │ SC   │
+ * ├──────────────────┼──────────────────────────────────┼──────┼──────┤
+ * │ Brute Force      │ Every subarray sum               │O(n²) │ O(1) │
+ * │ Prefix+HashMap   │ prefixSum→count map              │ O(n) │ O(n) │
+ * └──────────────────┴──────────────────────────────────┴──────┴──────┘
+ *
+ * ─────────────────────────────────────────
+ * APPROACH 1 — BRUTE FORCE
+ * ─────────────────────────────────────────
+ * WHY: Simplest — compute every possible subarray sum.
+ * HOW: Two nested loops. For each pair (i,j), compute sum.
+ *      If sum == k → count++.
+ *
+ * TC: O(n²) — n*(n-1)/2 subarrays
+ * SC: O(1)  — no extra space
+ * REJECTED: O(n²) too slow for n=2*10^4
+ */
+public int subarraySumBrute(int[] nums, int k) {
+    int count = 0;
+    for(int i = 0; i < nums.length; i++){
+        int sum = 0;
+        for(int j = i; j < nums.length; j++){
+            sum += nums[j];
+            if(sum == k) count++;
+        }
+    }
+    return count;
+}
+
+/*
+ * ─────────────────────────────────────────
+ * APPROACH 2 — PREFIX SUM + HASHMAP (Optimal)
+ * ─────────────────────────────────────────
+ * WHY HashMap:
+ * For each index, need to know how many previous prefix sums
+ * equal (currentSum - k) → O(1) lookup → HashMap.
+ *
+ * HOW:
+ * map stores: prefixSum → frequency (times this sum occurred)
+ * Initialize map with {0→1} — base case for subarrays from index 0.
+ *
+ * At each index i:
+ * 1. prefixSum += nums[i]
+ * 2. count += map.get(prefixSum - k)  ← how many valid starts exist
+ * 3. map.put(prefixSum, freq+1)       ← store current sum
+ *
+ * ORDER MATTERS — check before storing:
+ * If stored first → same prefixSum could match itself → wrong!
+ *
+ * Dry run — nums=[1,1,1], k=2:
+ * map:{0→1}, sum=0, count=0
+ * i=0: sum=1, check(1-2)=-1→not found, map:{0→1,1→1}
+ * i=1: sum=2, check(2-2)=0→found! count+=1, map:{0→1,1→1,2→1}
+ * i=2: sum=3, check(3-2)=1→found! count+=1, map:{0→1,1→1,2→1,3→1}
+ * return 2 ✅
+ *
+ * Dry run — nums=[1,2,3], k=3:
+ * map:{0→1}, sum=0, count=0
+ * i=0: sum=1, check(1-3)=-2→not found, map:{0→1,1→1}
+ * i=1: sum=3, check(3-3)=0→found! count+=1, map:{0→1,1→1,3→1}
+ * i=2: sum=6, check(6-3)=3→found! count+=1, map:{0→1,1→1,3→1,6→1}
+ * return 2 ✅ ([1,2] and [3])
+ *
+ * TC: O(n) — single pass, O(1) per containsKey/get/put
+ * SC: O(n) — map stores at most n distinct prefix sums
+ *
+ * Edge cases:
+ * - Negatives handled — prefix sum can decrease, HashMap covers all values ✅
+ * - k=0 → counts subarrays that sum to 0 ✅
+ * - Duplicate prefix sums → frequency tracking handles correctly ✅
+ */
+public int subarraySum(int[] nums, int k) {
+    Map<Integer, Integer> map = new HashMap<>();
+    map.put(0, 1); // base case — empty prefix
+    int prefixSum = 0, count = 0;
+    for(int i = 0; i < nums.length; i++){
+        prefixSum += nums[i];
+        // add frequency of (prefixSum-k) — each is a valid subarray start
+        if(map.containsKey(prefixSum - k))
+            count += map.get(prefixSum - k);
+        // store current prefixSum — check BEFORE storing to avoid self-match
+        map.put(prefixSum, map.getOrDefault(prefixSum, 0) + 1);
+    }
+    return count;
+}
