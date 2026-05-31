@@ -1,0 +1,76 @@
+/**
+ * LC 58 - Length of Last Word
+ * Difficulty: Easy
+ * Topic: Strings
+ *
+ * PROBLEM:
+ * Given a string s with words and spaces, return the length of the last word.
+ *
+ * =====================================================================
+ * APPROACH 1 - Brute Force (Trim + Split)
+ * =====================================================================
+ * WHY: Simplest instinct — split string into words, return last word's length.
+ *
+ * HOW:
+ * 1. trim() — removes leading and trailing spaces
+ * 2. split("\\s+") — splits on one or more spaces (handles multiple spaces)
+ *    NOTE: split(" ") would create empty strings for multiple consecutive spaces
+ *          so we use "\\s+" to handle that cleanly
+ * 3. Return last element's length
+ *
+ * EDGE CASES:
+ * - Trailing spaces: "moon  " → trim() handles this
+ * - Multiple spaces between words: "fly me   to   moon"
+ *   → split("\\s+") handles this cleanly, no empty strings in array
+ *
+ * TC: O(n) — trim() scans full string O(n), split() scans full string O(n)
+ *            total = O(n) + O(n) + O(1) = O(n)
+ * SC: O(n) — trimmed string + words array both at most size n
+ */
+public int lengthOfLastWord_BruteForce(String s) {
+    String[] words = s.trim().split("\\s+");
+    return words[words.length - 1].length();
+}
+
+/**
+ * =====================================================================
+ * APPROACH 2 - Optimal (Scan from Right)
+ * =====================================================================
+ * WHY: Avoid creating extra array → reduce space from O(n) to O(1)
+ *      No trim(), no split(), just two pointer scans from right end.
+ *
+ * HOW:
+ * Step 1 — skip trailing spaces scanning from right end
+ *           "fly me   moon  " → skip two spaces, land on 'n'
+ * Step 2 — count letters until we hit a space or reach start
+ *           'n','o','o','m' → count = 4, stop at space before 'm'
+ * Return count
+ *
+ * KEY INSIGHT: We don't need the whole string.
+ *              Only the last word matters — scan from right, stop early.
+ *
+ * MISCONCEPTION WE HAD:
+ * - split(" ") on "fly me   to   moon" produces empty strings ["fly","me","","","to","","","moon"]
+ *   because it splits on exactly one space. Use split("\\s+") instead.
+ * - trim() only removes leading/trailing spaces, NOT middle spaces.
+ *
+ * TC: O(n) — worst case scan full string (e.g. one word, no spaces)
+ * SC: O(1) — no extra memory, just two integer variables
+ */
+public int lengthOfLastWord(String s) {
+    int i = s.length() - 1;
+    int count = 0;
+
+    // Step 1 — skip trailing spaces
+    while (i >= 0 && s.charAt(i) == ' ') {
+        i--;
+    }
+
+    // Step 2 — count letters until space or start
+    while (i >= 0 && s.charAt(i) != ' ') {
+        count++;
+        i--;
+    }
+
+    return count;
+}
