@@ -1,0 +1,73 @@
+/**
+ * Factorial — All Approaches
+ * Topic: Recursion (Linear)
+ *
+ * CONSTRAINTS:
+ * - n >= 0 (factorial not defined for negatives)
+ * - n = 0 → return 1 (empty product by definition)
+ * - Use long not int — 13! already exceeds Integer.MAX_VALUE (~2.1 billion)
+ *
+ * =====================================================================
+ * APPROACH 1 — Iterative
+ * =====================================================================
+ * WHY: Simplest approach. No stack frames. Best for production.
+ * HOW: Multiply result by each number from n down to 2.
+ *      Loop condition i>1 naturally handles n=0 and n=1 (loop doesn't run).
+ *      No explicit base case check needed unlike recursive version.
+ * TC: O(n) | SC: O(1)
+ */
+public static long factorialIterative(int n) {
+    long result = 1;
+    for (int i = n; i > 1; i--) {
+        result *= i;
+    }
+    return result;
+}
+
+/**
+ * =====================================================================
+ * APPROACH 2 — Recursive (Non-Tail)
+ * =====================================================================
+ * WHY: Clean and natural — mirrors the mathematical definition n! = n × (n-1)!
+ * HOW: Base case n=0 or n=1 → return 1
+ *      Recursive case → n × factorial(n-1)
+ *      Frame must WAIT after recursive call returns to do the multiplication.
+ *      That's why it's non-tail — pending work exists after the call.
+ *
+ * COMMON MISTAKE: Base case n==1 only — misses n=0.
+ *      factorial(0) must return 1, else it recurses into negative numbers forever.
+ *
+ * TC: O(n) — n+1 total calls (n down to 0)
+ * SC: O(n) — n stack frames alive at peak depth simultaneously
+ */
+public static long factorialRecursive(int n) {
+    if (n == 0 || n == 1) return 1;
+    return n * factorialRecursive(n - 1);
+}
+
+/**
+ * =====================================================================
+ * APPROACH 3 — Tail Recursive
+ * =====================================================================
+ * WHY: Demonstrates tail call optimization concept.
+ *      Accumulator carries running result forward — nothing left to do after call.
+ *      In TCO languages (Scala, Kotlin) → O(1) space, same frame reused.
+ *      Java does NOT support TCO → still O(n) space in practice.
+ *
+ * HOW: Pass accumulator as second parameter, starting at 1.
+ *      Each call multiplies n into accumulator and passes forward.
+ *      Base case n=0 → accumulator already holds final answer, return it.
+ *
+ * COMMON MISTAKE 1: Returning 1 at base case instead of accumulator.
+ *      Accumulator IS the answer at base case — don't throw it away!
+ * COMMON MISTAKE 2: Resetting or conditionally modifying accumulator inside method.
+ *      Just pass n * accumulator forward. That's all.
+ *
+ * Call as: factorialTail(5, 1)
+ *
+ * TC: O(n) | SC: O(n) in Java, O(1) with TCO
+ */
+public static long factorialTail(int n, long accumulator) {
+    if (n == 0) return accumulator;
+    return factorialTail(n - 1, n * accumulator);
+}
