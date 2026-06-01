@@ -1,0 +1,47 @@
+/**
+ * Print 1 to N and Print N to 1
+ * Topic: Recursion (Linear) — Call Order vs Return Order
+ *
+ * CONSTRAINTS:
+ * - n >= 0
+ * - No loops allowed — pure recursion
+ *
+ * KEY INSIGHT:
+ * - Print BEFORE recursive call → executes during call phase → N to 1
+ * - Print AFTER recursive call → executes during return phase → 1 to N
+ * - This exact concept appears in tree traversals (pre/in/post order)
+ *
+ * =====================================================================
+ * APPROACH — Print N to 1
+ * =====================================================================
+ * HOW: Print n first, then recurse into n-1.
+ *      During call phase: 5 → 4 → 3 → 2 → 1 → base case
+ *      Output: 5 4 3 2 1
+ *
+ * TC: O(n) | SC: O(n) — n stack frames
+ */
+public static void printNto1(int n) {
+    if (n == 0) return;        // base case
+    System.out.println(n);     // print BEFORE call → call phase
+    printNto1(n - 1);          // recurse into smaller problem
+}
+
+/**
+ * =====================================================================
+ * APPROACH — Print 1 to N
+ * =====================================================================
+ * HOW: Recurse first, print after returning.
+ *      During return phase: base → 1 → 2 → 3 → 4 → 5
+ *      Output: 1 2 3 4 5
+ *
+ * COMMON MISTAKE: Printing before the call thinking it will print in order.
+ *      Printing before call always gives reverse order (N to 1).
+ *      To get ascending order, print must happen on the WAY BACK UP.
+ *
+ * TC: O(n) | SC: O(n) — n stack frames
+ */
+public static void print1toN(int n) {
+    if (n == 0) return;        // base case
+    print1toN(n - 1);          // recurse first
+    System.out.println(n);     // print AFTER call → return phase
+}
