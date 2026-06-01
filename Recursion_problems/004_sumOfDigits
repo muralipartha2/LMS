@@ -1,0 +1,38 @@
+/**
+ * Sum of Digits
+ * Topic: Recursion (Linear — on a number)
+ *
+ * CONSTRAINTS:
+ * - n >= 0
+ * - n = 0 → return 0
+ *
+ * KEY INSIGHT:
+ * - Recursion doesn't only work on arrays/strings.
+ *   Numbers can be reduced digit by digit using % and /
+ * - n % 10 → extracts last digit
+ * - n / 10 → removes last digit
+ * - Number of digits in n = log₁₀(n) = O(log n)
+ *   So TC and SC are both O(log n), NOT O(n)!
+ *
+ * =====================================================================
+ * APPROACH — Tail Recursive
+ * =====================================================================
+ * WHY: Carry running digit sum forward in accumulator.
+ *      Nothing left to do after recursive call — pure tail recursion.
+ * HOW: Base case n=0 → accumulator holds final answer, return it.
+ *      Recursive case → peel last digit (n%10), add to accSum, reduce n by n/10
+ *
+ * COMMON MISTAKE 1: Return type int but accumulator is long → type mismatch.
+ *      Always use long for accumulator to handle large numbers safely.
+ * COMMON MISTAKE 2: Base case returning 0 instead of accSum.
+ *      accSum IS the answer at base case — never discard it!
+ *
+ * Call as: sumDigits(123, 0)
+ *
+ * TC: O(log n) — one call per digit, digits = log₁₀(n)
+ * SC: O(log n) — stack depth = number of digits
+ */
+public static long sumDigits(int n, long accSum) {
+    if (n == 0) return accSum;
+    return sumDigits(n / 10, accSum + n % 10);
+}
