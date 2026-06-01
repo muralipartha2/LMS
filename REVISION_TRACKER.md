@@ -329,4 +329,4 @@ These patterns are missing from current coverage and should be added gradually:
 
 ---
 
-*Last auto-generated: May 2026*
+*Last auto-generated: June 2026*
