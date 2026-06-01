@@ -1,0 +1,63 @@
+/**
+ * Sum 1 to N — All Approaches
+ * Topic: Recursion (Linear)
+ *
+ * CONSTRAINTS:
+ * - n >= 0
+ * - n = 0 → return 0
+ * - Factorial is NOT defined for negative numbers (mathematically undefined)
+ * - Summation technically works for negatives but interview scope is n >= 0
+ *
+ * =====================================================================
+ * APPROACH 1 — Iterative
+ * =====================================================================
+ * WHY: Simplest, O(1) space, no stack risk.
+ * HOW: Loop from 1 to n, accumulate sum.
+ * TC: O(n) | SC: O(1)
+ */
+public static long summationIterative(int n) {
+    long sum = 0;
+    for (int i = 1; i <= n; i++) {
+        sum += i;
+    }
+    return sum;
+}
+
+/**
+ * =====================================================================
+ * APPROACH 2 — Recursive (Non-Tail)
+ * =====================================================================
+ * WHY: Natural recursive definition — sum(n) = n + sum(n-1)
+ * HOW: Base case n=0 → return 0
+ *      Recursive case → n + summation(n-1)
+ *      Frame waits after call to add n — non-tail recursion.
+ *
+ * COMMON MISTAKE: Base case returning 1 instead of 0.
+ *      sum(0) = 0, not 1. Off-by-one error propagates through all results.
+ *
+ * TC: O(n) | SC: O(n)
+ */
+public static long summationRecursive(int n) {
+    if (n == 0) return 0;
+    return n + summationRecursive(n - 1);
+}
+
+/**
+ * =====================================================================
+ * APPROACH 3 — Tail Recursive
+ * =====================================================================
+ * WHY: Accumulator carries running sum forward — nothing left after call.
+ * HOW: Base case n=0 → return accumulator (holds final answer)
+ *      Recursive case → pass n-1 and n+accumulator forward
+ *
+ * COMMON MISTAKE: Returning 0 at base case instead of accumulator.
+ *      Accumulator IS the answer — don't discard it!
+ *
+ * Call as: summationTail(n, 0)
+ *
+ * TC: O(n) | SC: O(n) in Java, O(1) with TCO
+ */
+public static long summationTail(int n, long accumulator) {
+    if (n == 0) return accumulator;
+    return summationTail(n - 1, n + accumulator);
+}
