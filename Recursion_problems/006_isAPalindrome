@@ -1,0 +1,66 @@
+/**
+ * Palindrome Check + LC 125 - Valid Palindrome
+ * Difficulty: Easy
+ * Topic: Recursion (Linear on string) — Two Pointer + Recursion
+ *
+ * =====================================================================
+ * APPROACH 1 — Pure Palindrome Check (no LC constraints)
+ * =====================================================================
+ * HOW: Two pointer recursive approach.
+ *      Base case 1: start >= end → all characters matched → true
+ *      Base case 2: s[start] != s[end] → mismatch → false
+ *      Recursive case: check middle portion
+ * TC: O(n) | SC: O(n)
+ */
+private boolean isPalindrome(char[] s, int start, int end) {
+    if (start >= end) return true;
+    if (s[start] != s[end]) return false;
+    return isPalindrome(s, start + 1, end - 1);
+}
+
+/**
+ * =====================================================================
+ * APPROACH 2 — LC 125 Valid Palindrome
+ * =====================================================================
+ * WHY: Real input has non-alphanumeric characters and mixed case.
+ *      Need to skip non-alphanumeric and compare case-insensitively.
+ *
+ * HOW:
+ * Step 1: If s[start] not alphanumeric → skip by recursing (start+1, end)
+ * Step 2: If s[end] not alphanumeric → skip by recursing (start, end-1)
+ * Step 3: Both valid — compare case insensitively
+ * Step 4: Match → recurse on middle (start+1, end-1)
+ *
+ * KEY INSIGHT:
+ * - Use recursive skip instead of while loop for consecutive
+ *   non-alphanumeric characters like "...." or "   "
+ * - Capture front/last AFTER alphanumeric check to avoid
+ *   comparing wrong characters after skipping
+ *
+ * COMMON MISTAKE 1: Using if instead of recursive skip for
+ *   non-alphanumeric — misses consecutive invalid characters.
+ * COMMON MISTAKE 2: Character.isLetterOrDigit(end) — end is an
+ *   int index not a char! Must be Character.isLetterOrDigit(s[end]).
+ * COMMON MISTAKE 3: Capturing front/last before skip check —
+ *   comparing stale characters after moving start/end.
+ *
+ * TC: O(n) — each character visited at most once
+ * SC: O(n) — stack depth at most n frames
+ */
+public boolean isPalindrome(String s) {
+    return palindrome(s.toCharArray(), 0, s.length() - 1);
+}
+
+public boolean palindrome(char[] s, int start, int end) {
+    if (start >= end) return true;
+    char front = s[start];
+    char last = s[end];
+    if (!Character.isLetterOrDigit(front))      // skip non-alphanumeric from left
+        return palindrome(s, start + 1, end);
+    if (!Character.isLetterOrDigit(last))        // skip non-alphanumeric from right
+        return palindrome(s, start, end - 1);
+    if (Character.toLowerCase(front) !=          // mismatch found
+        Character.toLowerCase(last))
+        return false;
+    return palindrome(s, start + 1, end - 1);   // match, check middle
+}
