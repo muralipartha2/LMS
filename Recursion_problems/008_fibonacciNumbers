@@ -1,1 +1,98 @@
+/**
+ * Fibonacci Number
+ * Topic: Recursion (Binary) + Memoization
+ *
+ * CONSTRAINTS:
+ * - n >= 0 (no negatives)
+ * - Two base cases needed — fib(0)=0, fib(1)=1
+ *   Missing either base case causes recursion into negatives!
+ *
+ * =====================================================================
+ * APPROACH 1 — Naive Recursive (Binary Recursion)
+ * =====================================================================
+ * WHY: Direct translation of mathematical definition.
+ *      fib(n) = fib(n-1) + fib(n-2)
+ * HOW: Two base cases, two recursive calls per level.
+ *      Forms a binary recursion tree — bushy and deep.
+ *
+ * PROBLEM: Overlapping subproblems!
+ *      fib(3) computed twice, fib(2) computed three times for fib(5).
+ *      Work explodes exponentially for large n.
+ *
+ * COMMON MISTAKE: Single base case if(n<=0) return 0
+ *      fib(1) falls through to recursive case → fib(0)+fib(-1)
+ *      Technically works but allows negative n into recursion — wrong!
+ *      Always use two explicit base cases.
+ *
+ * TC: O(2^n) — roughly 2 calls per level, n levels deep
+ * SC: O(n) — maximum stack depth at any moment = n (left branch)
+ */
+public int fibNaive(int n) {
+    if (n == 0) return 0;
+    if (n == 1) return 1;
+    return fibNaive(n - 1) + fibNaive(n - 2);
+}
 
+/**
+ * =====================================================================
+ * APPROACH 2 — Memoized Recursive (Top Down DP)
+ * =====================================================================
+ * WHY: Naive approach recomputes same values millions of times.
+ *      Memoization stores computed results — each value computed exactly once.
+ *
+ * HOW:
+ * Step 1 — check base cases first
+ * Step 2 — check memo before computing (if found, return directly)
+ * Step 3 — not in memo → compute recursively
+ * Step 4 — store result in memo before returning
+ *
+ * KEY INSIGHT:
+ * - memo.containsKey(n) check MUST come after base cases.
+ *   Base cases never need memo — they return directly.
+ * - Always non-tail recursive — frame must wait to:
+ *   (1) add fib(n-1) + fib(n-2)
+ *   (2) store result in memo
+ *   (3) return result
+ * - This is the gateway concept to Dynamic Programming (DP).
+ *   Overlapping subproblems + optimal substructure = DP candidate.
+ *
+ * COMMON MISTAKE: Forgetting to store result in memo before returning.
+ *   Without memo.put(), same values get recomputed — defeats the purpose!
+ *
+ * Call as: fibMemo(5, new HashMap<>())
+ *
+ * TC: O(n) — each value from 0 to n computed exactly once
+ * SC: O(n) — memo map stores n values + stack depth n
+ */
+public int fibMemo(int n, HashMap<Integer, Integer> memo) {
+    if (n == 0) return 0;
+    if (n == 1) return 1;
+    if (memo.containsKey(n)) return memo.get(n);    // already computed, return directly
+    int result = fibMemo(n - 1, memo) + fibMemo(n - 2, memo);  // compute
+    memo.put(n, result);                             // store before returning
+    return result;
+}
+
+/**
+ * =====================================================================
+ * APPROACH 3 — Iterative (Bottom Up)
+ * =====================================================================
+ * WHY: Best for production. No recursion, no memo map needed.
+ *      Build answer from bottom up — fib(0), fib(1), fib(2)...fib(n)
+ *
+ * HOW: Track only previous two values — prev1 and prev2.
+ *      Each iteration compute next = prev1 + prev2, slide window forward.
+ *
+ * TC: O(n) | SC: O(1) — no stack frames, no extra map
+ */
+public int fibIterative(int n) {
+    if (n == 0) return 0;
+    if (n == 1) return 1;
+    int prev2 = 0, prev1 = 1;
+    for (int i = 2; i <= n; i++) {
+        int next = prev1 + prev2;
+        prev2 = prev1;
+        prev1 = next;
+    }
+    return prev1;
+}
