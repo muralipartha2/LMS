@@ -1,0 +1,69 @@
+/**
+ * LC 704 - Binary Search
+ * Difficulty: Easy
+ * Topic: Recursion — Divide & Conquer
+ *
+ * CONSTRAINTS:
+ * - Array is sorted in ascending order
+ * - All elements unique
+ * - Return index if found, -1 if not found
+ *
+ * =====================================================================
+ * APPROACH 1 — Iterative
+ * =====================================================================
+ * WHY: Best for production — O(1) space, no stack frames.
+ * HOW: Maintain start/end pointers, shrink window each iteration.
+ * TC: O(log n) | SC: O(1)
+ */
+public int searchIterative(int[] nums, int target) {
+    int start = 0, end = nums.length - 1;
+    while (start <= end) {
+        int mid = start + (end - start) / 2;
+        if (nums[mid] == target) return mid;
+        else if (nums[mid] < target) start = mid + 1;
+        else end = mid - 1;
+    }
+    return -1;
+}
+
+/**
+ * =====================================================================
+ * APPROACH 2 — Recursive (Divide & Conquer)
+ * =====================================================================
+ * WHY: Classic recursion demonstration on sorted array.
+ *      Each call halves search space → O(log n) TC.
+ *
+ * HOW:
+ * Base case 1: start > end → target not found → return -1
+ * Base case 2: nums[mid] == target → found → return mid
+ * Recursive case:
+ *   nums[mid] < target → target in right half → recurse(mid+1, end)
+ *   nums[mid] > target → target in left half → recurse(start, mid-1)
+ *
+ * KEY INSIGHT:
+ * - mid = start + (end - start) / 2 NOT (start + end) / 2
+ *   (start + end) can overflow if both are large integers!
+ *   start + (end - start) / 2 avoids overflow safely.
+ * - LC signature has single input → use private helper with start/end
+ *
+ * COMMON MISTAKE 1: Base case start >= end instead of start > end.
+ *   When start == end, one element still remains to check — don't skip it!
+ * COMMON MISTAKE 2: mid = (start + end) / 2 → integer overflow risk.
+ *
+ * TC: O(log n) — search space halved each call
+ * SC: O(log n) — log n stack frames at peak depth
+ *   Note: Iterative version gives O(1) SC — preferred for production.
+ */
+public int search(int[] nums, int target) {
+    return recursive(nums, 0, nums.length - 1, target);
+}
+
+private int recursive(int[] nums, int start, int end, int target) {
+    if (start > end) return -1;                          // base case — not found
+    int mid = start + (end - start) / 2;                 // safe mid calculation
+    if (nums[mid] == target) return mid;                 // found!
+    else if (nums[mid] < target)
+        return recursive(nums, mid + 1, end, target);   // search right half
+    else
+        return recursive(nums, start, mid - 1, target); // search left half
+}
