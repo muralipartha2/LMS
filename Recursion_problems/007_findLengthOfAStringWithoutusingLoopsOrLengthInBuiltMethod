@@ -1,0 +1,39 @@
+/**
+ * String Length Recursively
+ * Topic: Recursion (Linear on string)
+ *
+ * CONSTRAINTS:
+ * - Cannot use s.length() or any loop
+ * - Empty string → return 0
+ *
+ * =====================================================================
+ * APPROACH — Tail Recursive with Substring
+ * =====================================================================
+ * WHY: Without length() or loops, only way to reduce string is substring(1)
+ *      which removes first character each call.
+ *      Accumulator carries running length forward.
+ *
+ * HOW: Base case → s.isEmpty() → return accLen (holds final length)
+ *      Recursive case → remove first char, increment accLen
+ *
+ * KEY INSIGHT:
+ * - Index approach seems cleaner but requires s.length() for base case
+ *   which violates the constraint — so substring is the only option.
+ * - s.equals("") and s.isEmpty() do exactly the same thing.
+ *   Using both with && is redundant — s.isEmpty() alone is sufficient.
+ *
+ * COMMON MISTAKE 1: substring() → wrong casing, Java uses substring() lowercase s.
+ * COMMON MISTAKE 2: Thinking SC is O(n) — substring(1) creates a NEW String
+ *   object every call. Total chars across all strings = n+(n-1)+...+1 = n(n+1)/2
+ *   → SC = O(n²) not O(n)!
+ * COMMON MISTAKE 3: Using && instead of just s.isEmpty() — redundant condition.
+ *
+ * Call as: length("hello", 0)
+ *
+ * TC: O(n) — n recursive calls, one per character
+ * SC: O(n²) — new String object created each call via substring(1)
+ */
+public int length(String s, int accLen) {
+    if (s.isEmpty()) return accLen;
+    return length(s.substring(1), accLen + 1);
+}
