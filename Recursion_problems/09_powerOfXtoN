@@ -1,0 +1,75 @@
+/**
+ * LC 50 - Pow(x, n)
+ * Difficulty: Medium
+ * Topic: Recursion — Divide & Conquer (Fast Power)
+ *
+ * CONSTRAINTS:
+ * - x range: -100 to 100
+ * - n range: -2^31 to 2^31 - 1 (full integer range)
+ * - n CAN be negative → x^(-n) = 1 / x^n
+ * - Result won't exceed 10^4
+ * - OVERFLOW RISK: n = Integer.MIN_VALUE → -n overflows back to MIN_VALUE!
+ *   Always cast n to long before negating.
+ *
+ * =====================================================================
+ * APPROACH 1 — Brute Force Iterative
+ * =====================================================================
+ * WHY: Simplest — multiply x by itself n times.
+ * HOW: Loop n times, multiply result by x each iteration.
+ * TC: O(n) | SC: O(1)
+ */
+public double myPowBrute(double x, int n) {
+    long N = Math.abs((long) n);
+    double result = 1.0;
+    for (long i = 0; i < N; i++) result *= x;
+    return n < 0 ? 1.0 / result : result;
+}
+
+/**
+ * =====================================================================
+ * APPROACH 2 — Fast Power (Divide & Conquer Recursion)
+ * =====================================================================
+ * WHY: Instead of reducing n by 1 each call (O(n)),
+ *      HALVE n each call → O(log n). Huge improvement!
+ *
+ * HOW:
+ * Step 1 — handle negative n: flip x to 1/x, make n positive, use long
+ * Step 2 — base case: n==0 → return 1.0 (anything^0 = 1)
+ * Step 3 — compute half = fastPow(x, n/2)
+ * Step 4 — even n: return half * half
+ *           odd n:  return half * half * x (one extra x)
+ *
+ * WHY even/odd split?
+ * - Even: x^4 = x² × x²  → just square the half result
+ * - Odd:  x^5 = x² × x² × x → square + one extra x
+ *   Can't split odd power evenly — need that extra x!
+ *
+ * KEY INSIGHT: Compute half ONCE and reuse — don't call fastPow twice!
+ *   return fastPow(x,n/2) * fastPow(x,n/2) → TWO calls → O(n) again!
+ *   Store in variable first → ONE call → O(log n) ✅
+ *
+ * COMMON MISTAKE 1: Not casting n to long before negating.
+ *   Integer.MIN_VALUE = -2^31, -(-2^31) overflows back to -2^31!
+ * COMMON MISTAKE 2: Using int n in helper — long needed throughout.
+ *
+ * TC: O(log n) — n halved each call, log n levels deep
+ * SC: O(log n) — stack depth = log n frames
+ */
+public double myPow(double x, int n) {
+    long N = n;              // cast to long — prevent overflow on negation
+    if (N < 0) {
+        x = 1.0 / x;        // flip x for negative power
+        N = -N;              // make n positive
+    }
+    return fastPow(x, N);
+}
+
+private double fastPow(double x, long n) {
+    if (n == 0) return 1.0;           // base case: anything^0 = 1
+    double half = fastPow(x, n / 2);  // compute half power ONCE
+    if (n % 2 == 0) {
+        return half * half;            // even: square the half
+    } else {
+        return half * half * x;        // odd: square + one extra x
+    }
+}
