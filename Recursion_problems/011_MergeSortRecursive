@@ -1,0 +1,92 @@
+/**
+ * LC 912 - Sort Array (Merge Sort)
+ * Difficulty: Medium
+ * Topic: Recursion — Divide & Conquer
+ *
+ * CONSTRAINTS:
+ * - Sort in ascending order
+ * - In-place using indices — no creating new left/right arrays
+ *
+ * KEY INSIGHT:
+ * - A single element array is always sorted — that's our base case!
+ * - Two separate jobs:
+ *   (1) mergeSort — pure recursion, just splits and delegates
+ *   (2) merge — pure iteration, combines two sorted halves
+ *   Recursion and loops are NOT mutually exclusive!
+ *
+ * =====================================================================
+ * APPROACH — Merge Sort (Divide & Conquer)
+ * =====================================================================
+ * WHY: Guaranteed O(n log n) — best comparison based sorting.
+ *      Stable sort — equal elements maintain relative order.
+ *
+ * HOW:
+ * Phase 1 — SPLIT:
+ *   Keep dividing array in half until single elements (base case)
+ *   Use start/end indices — no new arrays created during split
+ *
+ * Phase 2 — MERGE:
+ *   Two pointer merge — always pick smaller of left[i] vs right[j]
+ *   Copy remaining elements after one half exhausts
+ *   Copy temp array back into original array
+ *
+ * DRY RUN — [5,2,8,1,9,3,7,4]:
+ *   Split: [5,2,8,1] [9,3,7,4]
+ *   Split: [5,2] [8,1] [9,3] [7,4]
+ *   Split: [5][2] [8][1] [9][3] [7][4] ← base cases
+ *   Merge: [2,5] [1,8] [3,9] [4,7]
+ *   Merge: [1,2,5,8] [3,4,7,9]
+ *   Merge: [1,2,3,4,5,7,8,9] ✅
+ *
+ * TC REASONING:
+ *   log n levels deep (halving each time)
+ *   Each level does O(n) total work in merge
+ *   Total = O(n) × O(log n) = O(n log n)
+ *
+ * SC REASONING:
+ *   Recursion stack → O(log n) frames
+ *   Temp array in merge → O(n) at deepest merge
+ *   O(n) dominates → SC = O(n)
+ *
+ * COMMON MISTAKE 1: Thinking SC is O(log n) — forgetting temp array in merge!
+ * COMMON MISTAKE 2: mid = (start+end)/2 → overflow risk.
+ *   Always use start + (end-start)/2.
+ * COMMON MISTAKE 3: Thinking loops inside recursion is wrong.
+ *   Recursion handles splitting, loops handle merging — different jobs!
+ */
+class Solution {
+    public int[] sortArray(int[] nums) {
+        mergeSort(nums, 0, nums.length - 1);
+        return nums;
+    }
+
+    private void mergeSort(int[] nums, int start, int end) {
+        if (start >= end) return;                        // base case — single element
+        int mid = start + (end - start) / 2;            // safe mid calculation
+        mergeSort(nums, start, mid);                     // sort left half
+        mergeSort(nums, mid + 1, end);                   // sort right half
+        merge(nums, start, mid, end);                    // merge sorted halves
+    }
+
+    private void merge(int[] nums, int start, int mid, int end) {
+        int[] temp = new int[end - start + 1];          // temp array for merged result
+        int i = start, j = mid + 1, k = 0;
+
+        // pick smaller of two pointers each time
+        while (i <= mid && j <= end) {
+            if (nums[i] <= nums[j]) temp[k++] = nums[i++];  // left smaller
+            else temp[k++] = nums[j++];                       // right smaller
+        }
+
+        // copy remaining left elements
+        while (i <= mid) temp[k++] = nums[i++];
+
+        // copy remaining right elements
+        while (j <= end) temp[k++] = nums[j++];
+
+        // copy temp back into original array
+        for (int l = 0; l < temp.length; l++) {
+            nums[start + l] = temp[l];
+        }
+    }
+}
