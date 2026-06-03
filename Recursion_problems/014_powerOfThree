@@ -1,0 +1,50 @@
+/**
+ * LC 326 - Power of Three
+ * Difficulty: Easy
+ * Topic: Recursion (Linear — on a number)
+ *
+ * CONSTRAINTS:
+ * - n <= 0 → false
+ * - n = 1 → true (3^0 = 1)
+ *
+ * KEY INSIGHT:
+ * - Identical pattern to Power of Two — just divide by 3 instead of 2
+ * - Check divisibility BEFORE dividing — not after!
+ *   Dividing first then checking gives wrong results (n=3 returns false)
+ *
+ * =====================================================================
+ * APPROACH 1 — Iterative
+ * =====================================================================
+ * TC: O(log₃ n) | SC: O(1)
+ */
+public boolean isPowerOfThreeIterative(int n) {
+    if (n <= 0) return false;
+    while (n != 1) {
+        if (n % 3 != 0) return false;  // check FIRST
+        n /= 3;                         // then divide
+    }
+    return true;
+}
+
+/**
+ * =====================================================================
+ * APPROACH 2 — Recursive
+ * =====================================================================
+ * HOW:
+ *   Base case 1: n <= 0 → false
+ *   Base case 2: n == 1 → true
+ *   Base case 3: n % 3 != 0 → false
+ *   Recursive case: isPowerOfThree(n / 3)
+ *
+ * COMMON MISTAKE: Checking divisibility AFTER dividing.
+ *   n=3 → divide first → n=1 → 1%3=1 → returns false ❌
+ *   Always check n%3 BEFORE dividing!
+ *
+ * TC: O(log₃ n) | SC: O(log₃ n)
+ */
+public boolean isPowerOfThree(int n) {
+    if (n <= 0) return false;
+    if (n == 1) return true;
+    if (n % 3 != 0) return false;
+    return isPowerOfThree(n / 3);
+}
