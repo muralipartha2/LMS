@@ -1,0 +1,42 @@
+/**
+ * LC 342 - Power of Four
+ * Difficulty: Easy
+ * Topic: Recursion (Linear — on a number)
+ *
+ * CONSTRAINTS:
+ * - n <= 0 → false
+ * - n = 1 → true (4^0 = 1)
+ *
+ * KEY INSIGHT:
+ * - Same pattern as Power of Two and Three — just divide by 4.
+ * - Always check divisibility BEFORE dividing!
+ *   Integer division silently swallows remainders.
+ *   n=6 → 6/4=1 (integer division) → loop exits → true ❌ WRONG!
+ *   n=6 → 6%4=2 → return false ✅ CORRECT!
+ *
+ * =====================================================================
+ * APPROACH 1 — Iterative
+ * =====================================================================
+ * TC: O(log₄ n) | SC: O(1)
+ */
+public boolean isPowerOfFourIterative(int n) {
+    if (n <= 0) return false;
+    while (n != 1) {
+        if (n % 4 != 0) return false;  // check FIRST
+        n /= 4;                         // then divide
+    }
+    return true;
+}
+
+/**
+ * =====================================================================
+ * APPROACH 2 — Recursive
+ * =====================================================================
+ * TC: O(log₄ n) | SC: O(log₄ n)
+ */
+public boolean isPowerOfFour(int n) {
+    if (n <= 0) return false;
+    if (n == 1) return true;
+    if (n % 4 != 0) return false;
+    return isPowerOfFour(n / 4);
+}
