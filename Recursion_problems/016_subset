@@ -1,0 +1,49 @@
+/**
+ * LC 78 - Subsets
+ * Difficulty: Medium
+ * Topic: Recursion — Include/Exclude Pattern
+ *
+ * CONSTRAINTS:
+ * - All elements unique
+ * - Return all possible subsets (power set)
+ * - Order doesn't matter
+ *
+ * KEY INSIGHT — Include/Exclude Pattern:
+ * For every element, make a binary decision:
+ *   INCLUDE → copy current, add element, recurse with index+1
+ *   EXCLUDE → pass current unchanged, recurse with index+1
+ * Base case: index == nums.length → all decisions made → save subset
+ *
+ * Total subsets = 2^n (binary decision per element)
+ *
+ * COMMON MISTAKE 1: Creating empty list for include branch
+ *   List<Integer> subset = new ArrayList<>() → loses all previous elements!
+ *   Must copy current first: new ArrayList<>(current)
+ *
+ * COMMON MISTAKE 2: result.add(current) at base case
+ *   Adds reference not copy — future calls corrupt saved subset!
+ *   Always: result.add(new ArrayList<>(current))
+ *
+ * TC: O(n × 2^n) — 2^n subsets, each copy takes O(n)
+ * SC: O(n) stack depth + O(n × 2^n) result storage
+ */
+public List<List<Integer>> subsets(int[] nums) {
+    List<List<Integer>> result = new ArrayList<>();
+    solve(0, new ArrayList<>(), nums, result);
+    return result;
+}
+
+private void solve(int index, List<Integer> current,
+                   int[] nums, List<List<Integer>> result) {
+    if (index == nums.length) {
+        result.add(new ArrayList<>(current));  // save copy not reference!
+        return;
+    }
+    // INCLUDE — copy current, add element, recurse
+    List<Integer> subset = new ArrayList<>(current);  // copy first!
+    subset.add(nums[index]);
+    solve(index + 1, subset, nums, result);
+
+    // EXCLUDE — pass current unchanged
+    solve(index + 1, current, nums, result);
+}
