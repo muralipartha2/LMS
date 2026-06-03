@@ -1,0 +1,54 @@
+/**
+ * LC 90 - Subsets II
+ * Difficulty: Medium
+ * Topic: Recursion — Include/Exclude Pattern + Deduplication
+ *
+ * DIFFERENCE FROM LC 78:
+ * - Input may contain duplicates
+ * - Result must not contain duplicate subsets
+ *
+ * KEY INSIGHT — Why sorting is needed:
+ * Subsets are order-independent mathematically but Java Lists are
+ * order-dependent. Without sorting:
+ *   nums=[4,4,1] → Path1: [4,1], Path2: [1,4] → HashSet sees as DIFFERENT!
+ * With sorting:
+ *   nums=[1,4,4] → both paths produce [1,4] → HashSet deduplicates ✅
+ * Sorting guarantees elements always appear in same order across all paths.
+ *
+ * WHY HASHSET WORKS:
+ * - List.equals() compares element by element in order
+ * - After sorting, duplicate subsets always have same order
+ * - HashSet auto-rejects duplicates — no manual contains() check needed!
+ * - Convert Set back to List for return type
+ *
+ * COMMON MISTAKE 1: Not sorting first
+ *   [4,1] and [1,4] treated as different subsets by HashSet ❌
+ * COMMON MISTAKE 2: Manually checking contains() before adding
+ *   HashSet handles this automatically — just result.add() is enough
+ * COMMON MISTAKE 3: Returning result directly
+ *   Return type is List — must convert: new ArrayList<>(result)
+ *
+ * TC: O(n × 2^n) — 2^n subsets, each copy O(n)
+ * SC: O(n) stack depth + O(n × 2^n) result storage
+ */
+public List<List<Integer>> subsetsWithDup(int[] nums) {
+    Arrays.sort(nums);                          // sort first — ensures consistent order
+    Set<List<Integer>> result = new HashSet<>();
+    solve(0, new ArrayList<>(), nums, result);
+    return new ArrayList<>(result);             // convert Set to List
+}
+
+private void solve(int index, List<Integer> current,
+                   int[] nums, Set<List<Integer>> result) {
+    if (index == nums.length) {
+        result.add(new ArrayList<>(current));   // HashSet auto-deduplicates!
+        return;
+    }
+    // INCLUDE — copy current, add element, recurse
+    List<Integer> subset = new ArrayList<>(current);
+    subset.add(nums[index]);
+    solve(index + 1, subset, nums, result);
+
+    // EXCLUDE — pass current unchanged
+    solve(index + 1, current, nums, result);
+}
