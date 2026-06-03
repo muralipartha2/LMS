@@ -1,0 +1,61 @@
+/**
+ * LC 231 - Power of Two
+ * Difficulty: Easy
+ * Topic: Recursion (Linear — on a number)
+ *
+ * CONSTRAINTS:
+ * - n can be 0 or negative → return false immediately
+ * - n = 1 → true (2^0 = 1, 1 is odd but still power of two!)
+ *
+ * KEY INSIGHT:
+ * - Checking even/odd alone doesn't work — n=1 is odd but 2^0=1 ✅
+ * - Keep dividing by 2 — if n reaches 1 → power of two
+ *   If n is not divisible by 2 at any point → not power of two
+ * - n=0 causes infinite loop in iterative — always guard with n<=0 check!
+ *
+ * =====================================================================
+ * APPROACH 1 — Iterative
+ * =====================================================================
+ * WHY: O(1) space, no stack frames.
+ * HOW: Keep dividing by 2 until n==1 or n is odd.
+ *      Guard n<=0 at top — avoids infinite loop for n=0.
+ *      if(n==1) inside loop is redundant — while condition handles it.
+ *
+ * TC: O(log n) | SC: O(1)
+ */
+public boolean isPowerOfTwoIterative(int n) {
+    if (n <= 0) return false;
+    while (n != 1) {
+        if (n % 2 != 0) return false;  // odd → not power of two
+        n /= 2;                         // keep halving
+    }
+    return true;
+}
+
+/**
+ * =====================================================================
+ * APPROACH 2 — Recursive
+ * =====================================================================
+ * WHY: Clean, direct translation of the logic.
+ * HOW:
+ *   Base case 1: n <= 0 → false
+ *   Base case 2: n == 1 → true (reached bottom successfully)
+ *   Base case 3: n % 2 != 0 → false (not divisible by 2)
+ *   Recursive case: isPowerOfTwo(n / 2)
+ *
+ * NOTE: This is tail recursion — recursive call is last operation.
+ *   No pending work after call returns.
+ *   Java doesn't optimize TCO so SC still O(log n).
+ *
+ * COMMON MISTAKE: Missing n<=0 guard.
+ *   n=0 → 0%2==0 → recurses forever → infinite recursion/TLE!
+ *
+ * TC: O(log n) — dividing by 2 each call, log₂(n) levels
+ * SC: O(log n) — log₂(n) stack frames at peak depth
+ */
+public boolean isPowerOfTwo(int n) {
+    if (n <= 0) return false;   // guard — handles 0 and negatives
+    if (n == 1) return true;    // base case — reached 1 successfully
+    if (n % 2 != 0) return false; // odd → not power of two
+    return isPowerOfTwo(n / 2); // tail recursive — halve each call
+}
