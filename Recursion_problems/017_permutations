@@ -1,0 +1,85 @@
+/**
+ * LC 46 - Permutations
+ * Difficulty: Medium
+ * Topic: Recursion — Pick from Remaining Pattern
+ *
+ * PROBLEM IN SIMPLE WORDS:
+ * You have [1,2,3]. Fill 3 empty boxes with all 3 numbers.
+ * Every possible way of filling = one permutation.
+ * Total ways = 3! = 6.
+ *
+ * WHY NOT ITERATIVE:
+ * You need one loop per box. For n boxes you need n loops.
+ * You don't know n at compile time — can't write unknown number of loops.
+ * Each recursive call = one box. Goes as deep as needed automatically.
+ *
+ * DIFFERENCE FROM SUBSETS:
+ * Subsets → use SOME elements
+ * Permutations → use ALL elements in every possible sequence
+ *
+ * PATTERN — Pick from Remaining:
+ * Start with entire array as remaining.
+ * Each call picks one element → puts in current → passes leftovers forward.
+ * Elements move from remaining to current one by one.
+ * Total elements never changes — just shifts between remaining and current.
+ * When remaining empty → current has all elements → save it.
+ *
+ * WHY CONVERT ARRAY TO LIST:
+ * Array size is fixed — no remove() method.
+ * List has remove() — easy to remove picked element.
+ * Convert once at start, pass List throughout.
+ *
+ * COMMON MISTAKE 1: Not creating new copies of remaining and current.
+ *   Must create new lists each call — same as subsets pattern.
+ *   Modifying original remaining affects other branches!
+ *
+ * COMMON MISTAKE 2: Using index instead of remaining list.
+ *   Index approach needs visited[] array to track used elements.
+ *   remaining list naturally tracks what's left — cleaner!
+ *
+ * TC REASONING:
+ *   n! permutations exist (n × n-1 × n-2 × ... × 1)
+ *   Each permutation copy at base case takes O(n)
+ *   TC = O(n × n!)
+ *
+ * SC REASONING:
+ *   Only one path alive on stack at any time — n levels deep
+ *   Each level holds n elements total (remaining + current combined)
+ *   Stack space = n levels × n elements = O(n²)
+ *   Result storage = n! permutations × n elements = O(n × n!)
+ *   O(n × n!) dominates → overall SC = O(n × n!)
+ *
+ * TC: O(n × n!) | SC: O(n × n!)
+ */
+public List<List<Integer>> permute(int[] nums) {
+    List<List<Integer>> result = new ArrayList<>();
+    // convert array to List — need remove() method
+    List<Integer> remaining = new ArrayList<>();
+    for(int num : nums) remaining.add(num);
+    solve(remaining, new ArrayList<>(), result);
+    return result;
+}
+
+private void solve(List<Integer> remaining, List<Integer> current,
+                   List<List<Integer>> result) {
+    // base case — no elements left → full permutation saved
+    if(remaining.isEmpty()) {
+        result.add(new ArrayList<>(current));  // save copy not reference!
+        return;
+    }
+    // try each remaining element at current position
+    for(int i = 0; i < remaining.size(); i++) {
+        int picked = remaining.get(i);
+
+        // new current — copy + picked element
+        List<Integer> newCurrent = new ArrayList<>(current);
+        newCurrent.add(picked);
+
+        // new remaining — copy with picked element removed
+        List<Integer> newRemaining = new ArrayList<>(remaining);
+        newRemaining.remove(i);
+
+        // recurse — fill next box
+        solve(newRemaining, newCurrent, result);
+    }
+}
