@@ -1,0 +1,70 @@
+/**
+ * LC 22 - Generate Parentheses
+ * Difficulty: Medium
+ * Topic: Recursion — Pure Recursion with Constraints
+ *
+ * PROBLEM IN SIMPLE WORDS:
+ * You have n opening brackets and n closing brackets.
+ * Arrange them in every valid way.
+ * Valid means — closing brackets never exceed opening brackets at any point.
+ *
+ * RULES:
+ * 1. Add ( if opening brackets still remaining (open > 0)
+ * 2. Add ) only if close > open (unclosed brackets exist)
+ *    If close == open → adding ) would make invalid string!
+ *
+ * BASE CASE:
+ * open == 0 && close == 0 → all brackets placed → save string
+ * OR current.length() == 2*n → same thing
+ *
+ * KEY INSIGHT — Two SEPARATE if statements, not else if:
+ * Both conditions can be true at same time!
+ * open=1, close=2 → can add both ( and )
+ * else if would miss ) branch entirely when open>0!
+ *
+ * PURE RECURSION — no backtracking:
+ * String concatenation current+"(" creates NEW string each call.
+ * No undo needed — original current unchanged for other branch.
+ *
+ * TRACE for n=2:
+ * solve("", 2, 2)
+ * → solve("(", 1, 2)
+ *     → solve("((", 0, 2)
+ *         → solve("(()", 0, 1)
+ *             → solve("(())", 0, 0) → SAVE "(())" ✅
+ *     → solve("()", 1, 1)
+ *         → solve("()(", 0, 1)
+ *             → solve("()()", 0, 0) → SAVE "()()" ✅
+ *         close>open? 1>1 → NO, skip
+ * close>open? 2>2 → NO, skip
+ *
+ * COMMON MISTAKE 1: Using else if instead of two separate if statements.
+ *   Both branches must be tried independently at each step!
+ * COMMON MISTAKE 2: Condition close>open for adding ).
+ *   If close==open → can't add ) → would create invalid string.
+ *
+ * TC: O(4^n) approximately — nth Catalan number grows as 4^n/√n
+ * SC: O(n) stack depth — string grows by 1 each call, 2n levels deep
+ *     O(4^n/√n × n) result storage
+ */
+public List<String> generateParenthesis(int n) {
+    List<String> result = new ArrayList<>();
+    solve("", n, n, result);
+    return result;
+}
+
+private void solve(String current, int open, int close, List<String> result) {
+    // base case — all brackets placed → save
+    if(open == 0 && close == 0) {
+        result.add(current);
+        return;
+    }
+    // add opening bracket if available
+    if(open > 0) {
+        solve(current + "(", open - 1, close, result);
+    }
+    // add closing bracket only if unclosed brackets exist
+    if(close > open) {
+        solve(current + ")", open, close - 1, result);
+    }
+}
