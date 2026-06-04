@@ -1,0 +1,78 @@
+/**
+ * LC 39 - Combination Sum
+ * Difficulty: Medium
+ * Topic: Recursion — Pick/Skip Pattern
+ *
+ * PROBLEM IN SIMPLE WORDS:
+ * You have a bag. Target is 7. Candidates are [2,3,6,7].
+ * Pick numbers and put in bag. Same number can be picked again and again.
+ * Every time you pick — target reduces by that amount.
+ * When target becomes zero → bag has right combination → save it!
+ * When target becomes negative → went too far → stop!
+ *
+ * PATTERN — Pick/Skip:
+ * At each index, two choices:
+ *   PICK → add candidate to bag, reduce target, STAY at same index (can pick again!)
+ *   SKIP → move to next index, target unchanged
+ *
+ * KEY DIFFERENCE FROM SUBSETS:
+ * Subsets → move forward after every decision
+ * Combination Sum → stay at same index when picking (unlimited reuse!)
+ *
+ * WHY PURE RECURSION (no backtracking):
+ * Instead of modifying current bag and undoing after pick,
+ * create a NEW list for pick branch — current bag never touched.
+ * Skip branch uses original current — no undo needed!
+ *
+ * BASE CASES:
+ * target == 0 → found valid combination → save it
+ * target < 0  → overshot → stop
+ * index == candidates.length → no more candidates → stop
+ *
+ * FULL TRACE for [2,3,6,7], target=7:
+ * Pick 2 → Pick 2 → Pick 2 → Pick 2 → target=-1 STOP
+ *                           → Skip → Pick 3 → target=-2 STOP
+ *                           → Skip → ... all stop
+ *                 → Skip → Pick 3 → target=0 SAVE [2,2,3] ✅
+ *                         → Skip → ... all stop
+ *       → Skip → Pick 3 → ... all stop
+ *       → Skip → Pick 6 → ... all stop
+ *       → Skip → Pick 7 → ... all stop
+ * Skip → Pick 3 → ... all stop
+ * Skip → Pick 6 → ... all stop
+ * Skip → Pick 7 → target=0 SAVE [7] ✅
+ *
+ * COMMON MISTAKE 1: Moving to index+1 after pick.
+ *   Same number can be reused — must stay at same index after pick!
+ * COMMON MISTAKE 2: Only checking target<0 as stop condition.
+ *   Must also check index==candidates.length — no more candidates!
+ * COMMON MISTAKE 3: Using backtracking (remove last element after pick).
+ *   Pure recursion — create new list for pick branch instead.
+ *
+ * TC: O(n^(target/min)) — branching factor n, depth target/min candidate
+ * SC: O(target/min) stack depth + O(n × combinations) result storage
+ */
+public List<List<Integer>> combinationSum(int[] candidates, int target) {
+    List<List<Integer>> result = new ArrayList<>();
+    solve(candidates, 0, new ArrayList<>(), target, result);
+    return result;
+}
+
+private void solve(int[] candidates, int index, List<Integer> current,
+                   int target, List<List<Integer>> result) {
+    // target hit → save current combination
+    if(target == 0) {
+        result.add(new ArrayList<>(current));
+        return;
+    }
+    // went too far or no more candidates
+    if(target < 0 || index == candidates.length) return;
+
+    // PICK — new list with current candidate, stay at same index
+    List<Integer> withPick = new ArrayList<>(current);
+    withPick.add(candidates[index]);
+    solve(candidates, index, withPick, target - candidates[index], result);
+
+    // SKIP — pass current unchanged, move to next candidate
+    solve(candidates, index + 1, current, target, result);
+}
