@@ -1,0 +1,65 @@
+/**
+ * LC 40 - Combination Sum II
+ * Difficulty: Medium
+ * Topic: Recursion — Pick/Skip Pattern + Duplicate Pruning
+ *
+ * DIFFERENCE FROM LC 39:
+ * LC 39 — no duplicates in input, same element reused freely
+ * LC 40 — has duplicates in input, each element used only once
+ *
+ * TWO CHANGES FROM LC 39:
+ * 1. After picking — move to index+1 (no reuse)
+ * 2. After skipping — jump over ALL consecutive duplicate elements
+ *    Prevents duplicate combinations being explored entirely!
+ *
+ * WHY HASHSET ALONE CAUSES TLE:
+ * HashSet deduplicates at the END after generating all combinations.
+ * For input [1,1,1,1,1,1,1,1] — still generates 2^n paths before dedup.
+ * Fix — prune duplicates DURING recursion using while loop in skip branch.
+ * Now duplicate paths never explored → no TLE!
+ *
+ * WHY SORT FIRST:
+ * Duplicate elements must be adjacent for while loop to work correctly.
+ * Without sorting — duplicates scattered, while loop misses them.
+ *
+ * BASE CASES:
+ * target == 0 → valid combination → save
+ * target < 0  → overshot → stop
+ * index == length → no more candidates → stop
+ *
+ * COMMON MISTAKE 1: Using HashSet alone without pruning → TLE on duplicate inputs
+ * COMMON MISTAKE 2: Not sorting first → duplicates not adjacent → wrong dedup
+ * COMMON MISTAKE 3: Moving to index+1 in skip without jumping duplicates
+ *   → same duplicate path explored multiple times
+ *
+ * TC: O(2^n) worst case — but pruning makes it much faster in practice
+ * SC: O(n) stack depth + O(result) storage
+ */
+public List<List<Integer>> combinationSum2(int[] candidates, int target) {
+    Arrays.sort(candidates);                        // sort — duplicates become adjacent
+    Set<List<Integer>> result = new HashSet<>();
+    solve(candidates, 0, new ArrayList<>(), target, result);
+    return new ArrayList<>(result);
+}
+
+private void solve(int[] candidates, int index, List<Integer> current,
+                   int target, Set<List<Integer>> result) {
+    if(target == 0) {
+        result.add(new ArrayList<>(current));       // save combination
+        return;
+    }
+    if(target < 0 || index == candidates.length) return;
+
+    // PICK — move to index+1 (no reuse unlike LC 39)
+    List<Integer> withPick = new ArrayList<>(current);
+    withPick.add(candidates[index]);
+    solve(candidates, index + 1, withPick, target - candidates[index], result);
+
+    // SKIP — jump over ALL consecutive duplicates to prune duplicate paths
+    int nextIndex = index + 1;
+    while(nextIndex < candidates.length &&
+          candidates[nextIndex] == candidates[index]) {
+        nextIndex++;                                // skip duplicate elements
+    }
+    solve(candidates, nextIndex, current, target, result);
+}
