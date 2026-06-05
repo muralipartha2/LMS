@@ -1,0 +1,99 @@
+/**
+ * LC 17 - Letter Combinations of a Phone Number
+ * Difficulty: Medium
+ * Topic: Recursion — Loop inside Recursion pattern
+ *
+ * PROBLEM IN SIMPLE WORDS:
+ * You have phone buttons. Each button has letters.
+ * For input "23" — pick one letter from button 2, one from button 3.
+ * Every possible pick combination = one result.
+ * Think of it like boxes — one box per digit, fill each box with one letter.
+ *
+ * MAPPING:
+ * Index = digit, Value = letters for that digit
+ * 2→abc, 3→def, 4→ghi, 5→jkl, 6→mno, 7→pqrs, 8→tuv, 9→wxyz
+ *
+ * PATTERN — Loop inside Recursion:
+ * Each recursive call = one digit/box.
+ * Loop through letters of current digit — one recursive call per letter.
+ * Pick one letter, move to next digit, repeat.
+ * Base case: index == digits.length() → all boxes filled → save!
+ *
+ * EDGE CASE:
+ * Empty input → return empty list immediately!
+ * Otherwise mapping[digit-'0'] on empty string causes issues.
+ *
+ * TC REASONING:
+ * Each digit branches into at most 4 letters (7→pqrs, 9→wxyz)
+ * n digits → tree depth = n, branches = 4
+ * Total combinations = 4^n
+ * Also written as 2^(2n) = (2^2)^n = 4^n — same thing!
+ * General formula: O(k^n) where k = max letters per digit
+ *
+ * =====================================================================
+ * APPROACH 1 — Recursive
+ * =====================================================================
+ * WHY: Natural fit — one recursive call per letter per digit.
+ *      Pure recursion — current+c creates new string, no undo needed.
+ * TC: O(4^n) | SC: O(n) stack depth
+ */
+public List<String> letterCombinations(String digits) {
+    List<String> result = new ArrayList<>();
+    if(digits.isEmpty()) return result;             // edge case!
+    String[] mapping = {"", "", "abc", "def", "ghi",
+                        "jkl", "mno", "pqrs", "tuv", "wxyz"};
+    solve(digits, 0, "", mapping, result);
+    return result;
+}
+
+private void solve(String digits, int index, String current,
+                   String[] mapping, List<String> result) {
+    // base case — all digits processed → save combination
+    if(index == digits.length()) {
+        result.add(current);
+        return;
+    }
+    // get letters for current digit
+    String letters = mapping[digits.charAt(index) - '0'];
+    // try each letter — one recursive call per letter
+    for(char c : letters.toCharArray()) {
+        solve(digits, index + 1, current + c, mapping, result);
+    }
+}
+
+/**
+ * =====================================================================
+ * APPROACH 2 — Iterative
+ * =====================================================================
+ * WHY: Avoids recursion stack. Builds combinations level by level.
+ * HOW: Start with [""].
+ *      For each digit — take every existing combo, append each letter.
+ *      Replace result with new expanded combinations.
+ *
+ * TRACE for "23":
+ * Start: [""]
+ * Digit 2: ["a","b","c"]
+ * Digit 3: ["ad","ae","af","bd","be","bf","cd","ce","cf"] ✅
+ *
+ * COMMON MISTAKE: Not handling empty input — return early!
+ *
+ * TC: O(4^n) | SC: O(4^n) — intermediate result list grows each iteration
+ */
+public List<String> letterCombinationsIterative(String digits) {
+    List<String> result = new ArrayList<>();
+    if(digits.isEmpty()) return result;
+    String[] mapping = {"", "", "abc", "def", "ghi",
+                        "jkl", "mno", "pqrs", "tuv", "wxyz"};
+    result.add("");                                 // start with empty string
+    for(char digit : digits.toCharArray()) {
+        String letters = mapping[digit - '0'];
+        List<String> temp = new ArrayList<>();
+        for(String combo : result) {
+            for(char c : letters.toCharArray()) {
+                temp.add(combo + c);               // expand each combo
+            }
+        }
+        result = temp;                             // replace with expanded list
+    }
+    return result;
+}
