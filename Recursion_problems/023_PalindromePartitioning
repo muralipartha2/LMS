@@ -1,0 +1,83 @@
+/**
+ * LC 131 - Palindrome Partitioning
+ * Difficulty: Medium
+ * Topic: Recursion — Loop inside Recursion + Palindrome Check
+ *
+ * PROBLEM IN SIMPLE WORDS:
+ * You have a string and a knife.
+ * Cut the string at any positions.
+ * Every piece must be a palindrome.
+ * Find every possible way of cutting where all pieces are palindromes.
+ *
+ * PALINDROME REMINDER:
+ * String reads same forwards and backwards.
+ * "ab" → forward:ab, backward:ba → NOT same → not palindrome ❌
+ * "aa" → forward:aa, backward:aa → same → palindrome ✅
+ *
+ * PATTERN — Loop inside Recursion:
+ * At each index — try every possible cut to end of string.
+ * For each cut — check if substring is palindrome.
+ * If yes → add to current → recurse on remaining string.
+ * If no → skip that cut.
+ * Base case: index == s.length() → all cuts made → save partition!
+ *
+ * PURE RECURSION — no backtracking:
+ * Create new list for each valid cut — original current never modified.
+ * No undo step needed!
+ *
+ * TRACE for "aab":
+ * solve(0, [])
+ * ├── "a" palindrome → solve(1, ["a"])
+ * │     ├── "a" palindrome → solve(2, ["a","a"])
+ * │     │     └── "b" palindrome → solve(3, ["a","a","b"]) → SAVE ✅
+ * │     └── "ab" not palindrome → skip
+ * ├── "aa" palindrome → solve(2, ["aa"])
+ * │     └── "b" palindrome → solve(3, ["aa","b"]) → SAVE ✅
+ * └── "aab" not palindrome → skip
+ *
+ * TC REASONING:
+ * At each position — cut or not cut → binary decision → 2^n paths
+ * Each path does O(n) work (substring + palindrome check)
+ * TC = O(n × 2^n)
+ *
+ * SC: O(n) stack depth + O(result) storage
+ *
+ * COMMON MISTAKE 1: Using String current instead of List<String> current
+ *   We collect LIST of palindrome pieces — not a single string!
+ * COMMON MISTAKE 2: Not writing separate isPalindrome helper
+ *   Inline check makes code messy — keep it separate and clean.
+ */
+public List<List<String>> partition(String s) {
+    List<List<String>> result = new ArrayList<>();
+    solve(s, 0, new ArrayList<>(), result);
+    return result;
+}
+
+private void solve(String s, int index, List<String> current,
+                   List<List<String>> result) {
+    // base case — processed entire string → save partition
+    if(index == s.length()) {
+        result.add(new ArrayList<>(current));
+        return;
+    }
+    // try every possible cut from current index
+    for(int end = index; end < s.length(); end++) {
+        String sub = s.substring(index, end + 1);
+        if(isPalindrome(sub)) {
+            // palindrome found → create new list → recurse on remaining
+            List<String> newCurrent = new ArrayList<>(current);
+            newCurrent.add(sub);
+            solve(s, end + 1, newCurrent, result);
+        }
+    }
+}
+
+private boolean isPalindrome(String s) {
+    int start = 0, end = s.length() - 1;
+    while(start < end) {
+        if(s.charAt(start) != s.charAt(end)) return false;
+        start++;
+        end--;
+    }
+    return true;
+}
