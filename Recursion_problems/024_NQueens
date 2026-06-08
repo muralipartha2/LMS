@@ -1,0 +1,88 @@
+/**
+ * LC 51 - N-Queens
+ * Difficulty: Hard
+ * Topic: Recursion — Pure Recursion with Constraint Checking
+ *
+ * PROBLEM IN SIMPLE WORDS:
+ * You have n rows. Place exactly one queen per row.
+ * A queen blocks same column, same diagonal, same anti-diagonal.
+ * Find every possible arrangement where no two queens attack each other.
+ *
+ * KEY INSIGHT — How to detect attacks:
+ * 1. Same column → track used columns in Set
+ * 2. Same diagonal (top-left to bottom-right) → row-col is same for all cells
+ *    row=0,col=0 → 0-0=0
+ *    row=1,col=1 → 1-1=0 ← same diagonal!
+ * 3. Same anti-diagonal (top-right to bottom-left) → row+col is same
+ *    row=0,col=2 → 0+2=2
+ *    row=1,col=1 → 1+1=2 ← same anti-diagonal!
+ *
+ * PURE RECURSION — no backtracking:
+ * Create NEW copies of board and all three sets each call.
+ * Original objects never modified — no undo step needed!
+ * Trade-off: O(n²) space per call for board copy.
+ *
+ * BOARD REPRESENTATION:
+ * List<String> — one string per row.
+ * Each row starts as "...." (n dots).
+ * Queen placed by replacing dot with 'Q' at col position.
+ *
+ * ALGORITHM:
+ * Row by row — try each column.
+ * Safety check — skip if col, diag, antiDiag blocked.
+ * Place queen → build row string → create new copies → recurse next row.
+ * Base case: row==n → all queens placed → save board!
+ *
+ * COMMON MISTAKE 1: Typo — antiDag instead of antiDiag → compile error!
+ * COMMON MISTAKE 2: Not creating new copies of sets and board.
+ *   Modifying originals corrupts other recursive branches!
+ * COMMON MISTAKE 3: Using row-col for anti-diagonal instead of row+col.
+ *   row-col = diagonal, row+col = anti-diagonal. Don't mix up!
+ *
+ * TC: O(n!) — n choices row 0, n-1 row 1, n-2 row 2...
+ * SC: O(n²) per call (board copy) × n levels = O(n³)
+ */
+public List<List<String>> solveNQueens(int n) {
+    List<List<String>> result = new ArrayList<>();
+    solve(0, n, new ArrayList<>(),
+          new HashSet<>(), new HashSet<>(), new HashSet<>(),
+          result);
+    return result;
+}
+
+private void solve(int row, int n, List<String> board,
+                   Set<Integer> cols, Set<Integer> diag,
+                   Set<Integer> antiDiag, List<List<String>> result) {
+    // base case — all rows filled → save board
+    if(row == n) {
+        result.add(new ArrayList<>(board));
+        return;
+    }
+    // try each column in current row
+    for(int col = 0; col < n; col++) {
+        // skip if blocked
+        if(cols.contains(col)) continue;
+        if(diag.contains(row - col)) continue;
+        if(antiDiag.contains(row + col)) continue;
+
+        // build row string with queen at col
+        char[] rowArr = new char[n];
+        Arrays.fill(rowArr, '.');
+        rowArr[col] = 'Q';
+
+        // create new copies — pure recursion, no undo!
+        List<String> newBoard = new ArrayList<>(board);
+        newBoard.add(new String(rowArr));
+
+        Set<Integer> newCols = new HashSet<>(cols);
+        newCols.add(col);
+
+        Set<Integer> newDiag = new HashSet<>(diag);
+        newDiag.add(row - col);
+
+        Set<Integer> newAntiDiag = new HashSet<>(antiDiag);
+        newAntiDiag.add(row + col);
+
+        solve(row + 1, n, newBoard, newCols, newDiag, newAntiDiag, result);
+    }
+}
